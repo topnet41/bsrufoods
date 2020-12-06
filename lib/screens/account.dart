@@ -1,5 +1,6 @@
 import 'dart:convert';
 
+import 'package:bsrufoods/controller/auth_controller.dart';
 import 'package:bsrufoods/controller/getphoto.dart';
 import 'package:bsrufoods/screens/account/review.dart';
 import 'package:bsrufoods/screens/login.dart';
@@ -17,111 +18,89 @@ class Account extends StatefulWidget {
 }
 
 class _AccountState extends State<Account> {
-
   FirebaseAuth firebase = FirebaseAuth.instance;
 
   final facebookLogin = FacebookLogin();
+  String statusShop = "เปิด";
+  int shop = 0;
 
-  var photo;
-
-  @override
-  void initState() { 
-    super.initState();
-       login();
+  Future<void> logout() async {
+    await facebookLogin.logOut();
+    await firebase.signOut();
+    Navigator.pushReplacementNamed(context, "/login");
   }
-
-void login()async{
-  final result = await facebookLogin.logIn(["email", "public_profile"]);
-  final token = result.accessToken.token;
-final graphResponse = await http.get('https://graph.facebook.com/v2.12/me?fields=name,first_name,last_name,picture,email&access_token=${token}');
-final profile = json.decode(graphResponse.body);
-
-  var dataphoto = Getphoto.fromJson(profile);
-    setState(() {
-        photo = dataphoto.picture.data.url;
-    });
-}
-
-
 
   @override
   Widget build(BuildContext context) {
+    var user = firebase.currentUser;
     return Scaffold(
-      appBar: AppBar(
-        title: Text("บัญชีผู้ใช้", style: TextStyle(fontSize: 32.0)),
-        centerTitle: true,
-      ),
-      body: ListView.separated(
-          itemBuilder: (context, index) {
-            var name = [
-              firebase.currentUser.displayName,
-              "สถานะของร้าน",
-              "การขาย",
-              "รีวิว",
-              "ตั้งค่า"
-            ];
-            var status = ["", "เปิด", "", "", ""];
-            var icon = <Widget>[
-              ClipOval(
-                  child: photo == null ? CircularProgressIndicator() : Image.network(
-                    photo,
-                    width: 50,height: 50,fit: BoxFit.fill,
-                  )),
-              Icon(
-                Icons.store,
-                size: 36,
-                color: Color.fromRGBO(196, 196, 196, 1.0),
+        appBar: AppBar(
+          title: Text("บัญชีผู้ใช้", style: TextStyle(fontSize: 32.0)),
+          centerTitle: true,
+        ),
+        body: SingleChildScrollView(
+          child: Column(
+            children: [
+              ListTile(
+                leading: ClipRRect(
+                    borderRadius: BorderRadius.circular(50.0),
+                    child: Image.network(user.photoURL)),
+                title: Text(
+                  user.displayName,
+                  style: TextStyle(fontSize: 20),
+                ),
+                subtitle: Text(
+                  "แก้ไขข้อมูล",
+                  style: TextStyle(color: Colors.green),
+                ),
+                onTap: () {},
               ),
-              Icon(
-                Icons.insert_chart,
-                size: 36,
-                color: Color.fromRGBO(196, 196, 196, 1.0),
+              Divider(),
+              ListTile(
+                leading: Icon(Icons.store, size: 40),
+                title: Text("สถานะของร้าน"),
+                trailing: Text(statusShop),
+                onTap: () {
+                  setState(() {
+                    if (shop == 0) {
+                      statusShop = "ปิด";
+                      shop--;
+                    } else {
+                      statusShop = "เปิด";
+                      shop++;
+                    }
+                  });
+                },
               ),
-              Icon(
-                Icons.comment,
-                size: 36,
-                color: Color.fromRGBO(196, 196, 196, 1.0),
+              Divider(),
+              ListTile(
+                leading: Icon(Icons.leaderboard, size: 40),
+                title: Text("การขาย"),
+                onTap: () {},
               ),
-              Icon(
-                Icons.settings,
-                size: 36,
-                color: Color.fromRGBO(196, 196, 196, 1.0),
+              Divider(),
+              ListTile(
+                leading: Icon(Icons.comment, size: 40),
+                title: Text("รีวิว"),
+                onTap: () {},
               ),
-            ];
-            var subtitle = <Widget>[
-              Text(
-                "แก้ไขข้อูมล",
-                style: TextStyle(color: Colors.green),
+              Divider(),
+              ListTile(
+                leading: Icon(Icons.settings, size: 40),
+                title: Text("ตั้งค่า"),
+                onTap: () {},
               ),
-              null,
-              null,
-              null,
-              null
-            ];
-            var page = [null, null, null, Review(), Setting()];
-            return ListTile(
-              leading: icon[index],
-              title: Text(
-                name[index],
-                style: TextStyle(fontSize: 20),
-              ),
-              subtitle: subtitle[index],
-              trailing: Text(status[index]),
-              onTap: () {
-                if (index == 1) {
-                  
-                } else {
-                  MaterialPageRoute route = MaterialPageRoute(
-                      builder: (BuildContext context) => page[index]);
-                  Navigator.push(context, route);
-                }
-              },
-            );
-          },
-          separatorBuilder: (context, index) => Divider(
-                color: Color.fromRGBO(196, 196, 196, 1.0),
-              ),
-          itemCount: 5),
-    );
+              Divider(),
+              ListTile(
+                leading: Icon(Icons.logout, size: 40),
+                title: Text("ออกจากระบบ"),
+                onTap: () {
+                  logout();
+                  print("logout");
+                },
+              )
+            ],
+          ),
+        ));
   }
 }

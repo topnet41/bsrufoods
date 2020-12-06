@@ -1,7 +1,13 @@
+import 'dart:convert';
+
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter_facebook_login/flutter_facebook_login.dart';
+import 'package:http/http.dart' as http;
+
+
+import 'getphoto.dart';
 
 class Authcontroller {
   FirebaseAuth _firebaseAuth = FirebaseAuth.instance;
@@ -30,13 +36,18 @@ class Authcontroller {
   Future loginWithFacebook(BuildContext context) async {
     FacebookLoginResult result =
         await facebookLogin.logIn(["email", "public_profile"]);
-
     var token = result.accessToken.token;
-    print("tokken = ${result.accessToken.token}");
+
+    final graphResponse = await http.get('https://graph.facebook.com/v2.12/me?fields=name,first_name,last_name,picture,email&access_token=${token}');
+    final profile = json.decode(graphResponse.body);
+    var dataphoto = Getphoto.fromJson(profile);
+    String photo = dataphoto.picture.data.url;
     await _firebaseAuth.signInWithCredential(FacebookAuthProvider.credential(
         token));
-
+    var user = _firebaseAuth.currentUser;  
+    await user.updateProfile(photoURL: photo);
     Navigator.pushReplacementNamed(_context, '/home');
   }
+
 
 }

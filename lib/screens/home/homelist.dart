@@ -14,7 +14,7 @@ class Homelist extends StatefulWidget {
 
 class _HomelistState extends State<Homelist> {
  
-  dynamic url = "https://80cfd1edf224.ngrok.io/file/data.json";
+  dynamic url = "https://apibsrufood.000webhostapp.com/data.json";
 
   @override
   void initState() { 

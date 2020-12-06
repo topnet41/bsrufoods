@@ -44,13 +44,22 @@ class _SplashScreenState extends State<SplashScreen> {
   @override
   void initState() {
     super.initState();
+       var user = firebase.currentUser;
+       print("user == ${user}");
     Future.microtask(() {
-      Navigator.pushReplacementNamed(context, '/login');
-      print("userid = ${firebase.currentUser.photoURL}");
-      firebaseMessaging.getToken().then((String token) {
-        assert(token != null);
-        print("Token : $token");
-      });
+      if(user != null){
+        Navigator.pushReplacementNamed(context, '/home');
+      }
+      else{
+        Navigator.pushReplacementNamed(context, '/login');
+      }
+
+      // Navigator.pushReplacementNamed(context, '/login');
+      // print("userid = ${firebase.currentUser.photoURL}");
+      // firebaseMessaging.getToken().then((String token) {
+      //   assert(token != null);
+      //   print("Token : $token");
+      // });
     });
   }
 
@@ -62,7 +71,6 @@ class _SplashScreenState extends State<SplashScreen> {
           mainAxisSize: MainAxisSize.min,
           children: [
             Image.asset("images/logo.png", width: 150),
-            CircularProgressIndicator(),
           ],
         ),
       ),
