@@ -44,8 +44,8 @@ class _AccountState extends State<Account> {
               ListTile(
                 leading: ClipRRect(
                     borderRadius: BorderRadius.circular(50.0),
-                    child: Image.network(user.photoURL)),
-                title: Text(
+                    child: user.photoURL == null? Text("adas") : Image.network(user.photoURL)),
+                title: user.displayName == null ? Text("asd") :Text(
                   user.displayName,
                   style: TextStyle(fontSize: 20),
                 ),

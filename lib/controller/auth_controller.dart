@@ -44,8 +44,7 @@ class Authcontroller {
     String photo = dataphoto.picture.data.url;
     await _firebaseAuth.signInWithCredential(FacebookAuthProvider.credential(
         token));
-    var user = _firebaseAuth.currentUser;  
-    await user.updateProfile(photoURL: photo);
+    await _firebaseAuth.currentUser.updateProfile(photoURL: photo);
     Navigator.pushReplacementNamed(_context, '/home');
   }
 

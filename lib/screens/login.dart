@@ -1,7 +1,6 @@
 import 'package:bsrufoods/controller/auth_controller.dart';
-import 'package:firebase_auth/firebase_auth.dart';
+import 'package:bsrufoods/screens/account/register.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_facebook_login/flutter_facebook_login.dart';
 
 class Login extends StatefulWidget {
   @override
@@ -15,7 +14,6 @@ final keyfrom = GlobalKey<FormState>();
 final userController = TextEditingController();
 final passwordController = TextEditingController();
 Authcontroller authController;
-final facebookLogin = FacebookLogin();
 
 
 
@@ -27,6 +25,7 @@ void _onLogin() {
     print(passwordController.text);
   }
 }
+
 
 class _LoginState extends State<Login> {
   @override
@@ -89,7 +88,8 @@ class _LoginState extends State<Login> {
                                   style: TextStyle(
                                       fontSize: 18, color: Colors.white)),
                               onPressed: () {
-                                _onLogin();
+                                MaterialPageRoute route = MaterialPageRoute(builder: (BuildContext context)=>Register());
+                                Navigator.push(context, route);
                               }),
                         ),
                         Align(

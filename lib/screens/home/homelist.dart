@@ -23,6 +23,13 @@ class _HomelistState extends State<Homelist> {
   }
 
   List<MyData> myAllData = [];
+  List send = [];
+
+  void sendNotification()async{
+        await http.get("https://apibsrufood.000webhostapp.com/apiNotification.php?isAdd=true&token=esV46vSMS2uSXFdQ_H7kX3:APA91bFYLbR4jn1yp3N7ASJLa8a5g2J3ahGQ2lc3KfnwBPgwI-FHcaGCTVPM-5W2WgCF2mW65u3Zaf3Ab930kYZ-O43OpVdffgT8PzPlhgcB3DkwHN_W49z3GE0CmHGgJKcrKhLRH0Dq&title=ร้านยายหลา&body=อาหารได้แล้วครับ");
+        Navigator.pop(context);
+        // print("asd");
+  }
 
   void loadData()async{
        var response = await http.get(url);
@@ -65,7 +72,12 @@ class _HomelistState extends State<Homelist> {
                       onChanged: (bool value) {
                         setState(() {
                           order.status = value;
-                          print(order.name);
+                          if(value){
+                          send.add(order.name);
+                          }else{
+                          send.remove(order.name);
+                          }
+                          print(send);
                         });
                       }),
                   ],
@@ -166,7 +178,18 @@ class _HomelistState extends State<Homelist> {
                   Alert(
                           context: context,
                           title: "ต้องการเสิร์ฟทั้งหมด",
-                          desc: "Flutter is awesome.")
+                          buttons: [
+              DialogButton(
+                onPressed: (){
+                  sendNotification();
+                } ,
+                child: Text(
+                  "เสิร์ฟ",
+                  style: TextStyle(color: Colors.white, fontSize: 20),
+                ),
+                color: Color.fromRGBO(255, 51, 247, 1),
+              ),
+                          ],)
                       .show();
                 }),
             IconButton(
