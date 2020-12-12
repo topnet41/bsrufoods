@@ -3,7 +3,6 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:rflutter_alert/rflutter_alert.dart';
-import 'package:badges/badges.dart';
 import 'package:http/http.dart' as http;
 import 'mydata.dart';
 
@@ -157,17 +156,7 @@ class _HomelistState extends State<Homelist> {
       child: Scaffold(
         appBar: AppBar(
           actionsIconTheme: IconThemeData(color: Colors.white, size: 28),
-          leading: Badge(
-            badgeContent: Text('3'),
-            toAnimate: true,
-            position: BadgePosition(top: -1,start: 33),
-            child: IconButton(
-                icon: Icon(
-                  Icons.notifications,
-                ),
-                onPressed: (){},
-            )
-          ),
+          leading: Text(""),
           centerTitle: true,
           actions: <Widget>[
             IconButton(

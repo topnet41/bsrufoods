@@ -9,6 +9,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_facebook_login/flutter_facebook_login.dart';
 import 'package:http/http.dart' as http;
+import 'package:rflutter_alert/rflutter_alert.dart';
 
 class Account extends StatefulWidget {
   Account({Key key}) : super(key: key);
@@ -23,6 +24,41 @@ class _AccountState extends State<Account> {
   final facebookLogin = FacebookLogin();
   String statusShop = "เปิด";
   int shop = 0;
+  bool statusButton;
+  @override
+  void initState() { 
+    super.initState();
+    statusButton = false;
+  }
+
+  void alertConfirm(){
+      Alert(
+            context: context,
+            title: "ออกจากระบบ?",
+            buttons: [
+              DialogButton(
+                onPressed:statusButton == true ? (){} : (){
+                  setState(() {
+                    statusButton = true;
+                  });
+                  logout();
+                },
+                child: statusButton == true ? CircularProgressIndicator() : Text(
+                  "ตกลง",
+                  style: TextStyle(color: Colors.white, fontSize: 20),
+                ),
+                color: Color.fromRGBO(255, 0, 0, 1),
+              ),
+              DialogButton(
+                onPressed: () => Navigator.pop(context),
+                child: Text(
+                  "ยกเลิก",
+                  style: TextStyle(color: Colors.white, fontSize: 20),
+                ),
+                color: Color.fromRGBO(0, 0, 0, 1),
+              ),
+            ]).show();
+  }
 
   Future<void> logout() async {
     await facebookLogin.logOut();
@@ -36,6 +72,7 @@ class _AccountState extends State<Account> {
     return Scaffold(
         appBar: AppBar(
           title: Text("บัญชีผู้ใช้", style: TextStyle(fontSize: 32.0)),
+          leading: Text(""),
           centerTitle: true,
         ),
         body: SingleChildScrollView(
@@ -82,21 +119,23 @@ class _AccountState extends State<Account> {
               ListTile(
                 leading: Icon(Icons.comment, size: 40),
                 title: Text("รีวิว"),
-                onTap: () {},
+                onTap: (){
+                  MaterialPageRoute route = MaterialPageRoute(builder: (BuildContext context)=>Review());
+                  Navigator.of(context).push(route);
+                },
               ),
-              Divider(),
-              ListTile(
-                leading: Icon(Icons.settings, size: 40),
-                title: Text("ตั้งค่า"),
-                onTap: () {},
-              ),
+              // Divider(),
+              // ListTile(
+              //   leading: Icon(Icons.settings, size: 40),
+              //   title: Text("ตั้งค่า"),
+              //   onTap: () {},
+              // ),
               Divider(),
               ListTile(
                 leading: Icon(Icons.logout, size: 40),
                 title: Text("ออกจากระบบ"),
                 onTap: () {
-                  logout();
-                  print("logout");
+                  alertConfirm();
                 },
               )
             ],

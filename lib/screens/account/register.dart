@@ -1,13 +1,15 @@
 import 'dart:io';
 import 'dart:math';
 
-import 'package:bsrufoods/screens/account/register_Controller.dart';
+import 'package:bsrufoods/screens/home.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:rflutter_alert/rflutter_alert.dart';
 
 class Register extends StatefulWidget {
   @override
@@ -21,22 +23,40 @@ class _RegisterState extends State<Register> {
   final passwordController = TextEditingController();
   final phoneNumber = TextEditingController();
   final reCeipt = TextEditingController();
-  String statusUser = "admin";
   FirebaseAuth firebaseAuth = FirebaseAuth.instance;
+  FirebaseMessaging _firebaseMessaging = FirebaseMessaging();
 
   final picker = ImagePicker();
 
   File _image;
   File _imgReceipt;
-  String urlPhoto,urlPhoto1;
+  String urlPhoto, urlPhoto1;
 
   void _onSave() {
-    uploadPictureToStore();
-
-    // if (keyfrom.currentState.validate()) {
-    //   keyfrom.currentState.save();
-    //   print(passwordController.text);
-    // }
+    if (_imgReceipt == null) {
+      Alert(
+        context: context,
+        type: AlertType.warning,
+        title: "กรุณาเพิ่มบาร์โค้ด", 
+        buttons: [
+              DialogButton(
+                onPressed: (){
+                  Navigator.pop(context);
+                } ,
+                child: Text(
+                  "ตกลง",
+                  style: TextStyle(color: Colors.white, fontSize: 20),
+                ),
+              )
+            ]
+            ).show();
+    } else {
+      if (keyfrom.currentState.validate()) {
+        keyfrom.currentState.save();
+        registerThread();
+        print(passwordController.text);
+      }
+    }
   }
 
   Future<void> uploadPictureToStore() async {
@@ -44,21 +64,25 @@ class _RegisterState extends State<Register> {
     int i = random.nextInt(100000);
 
     FirebaseStorage firebaseStorage = FirebaseStorage.instance;
+    if(_image != null){
     await firebaseStorage.ref().child('Member/member$i.jpg').putFile(_image);
-         urlPhoto = await firebaseStorage
+    urlPhoto = await firebaseStorage
         .ref()
         .child('Member/member$i.jpg')
         .getDownloadURL();
+        }else{
+          urlPhoto ="https://firebasestorage.googleapis.com/v0/b/bsrufood.appspot.com/o/Member%2Fbaseline_account_circle_black_48dp.png?alt=media&token=2269f14d-3913-4911-9baa-94b0e615c7a9";
+        }
     await firebaseStorage
         .ref()
         .child('Barcode/member$i.jpg')
         .putFile(_imgReceipt);
-         urlPhoto1 = await firebaseStorage
+    urlPhoto1 = await firebaseStorage
         .ref()
         .child('Barcode/member$i.jpg')
         .getDownloadURL();
 
-    await registerThread();
+    await setupDisplayName();
   }
 
   Future<void> registerThread() async {
@@ -67,10 +91,27 @@ class _RegisterState extends State<Register> {
             email: userController.text, password: passwordController.text)
         .then((response) {
       print('Register Success for Email = $userController');
-      setupDisplayName();
+      uploadPictureToStore();
     }).catchError((response) {
       String title = response.code;
       String message = response.message;
+      Alert(
+        context: context,
+        type: AlertType.info,
+        title: title,
+        desc: message, 
+        buttons: [
+              DialogButton(
+                onPressed: (){
+                  Navigator.pop(context);
+                } ,
+                child: Text(
+                  "ตกลง",
+                  style: TextStyle(color: Colors.white, fontSize: 20),
+                ),
+              )
+            ]
+            ).show();
       print('title = $title,message = $message');
     });
   }
@@ -78,16 +119,27 @@ class _RegisterState extends State<Register> {
   Future<void> setupDisplayName() async {
     FirebaseAuth firebaseAuth = FirebaseAuth.instance;
     FirebaseFirestore firestore = FirebaseFirestore.instance;
-    Map<String,dynamic> map = Map();
+    List<String> tokenUser;
+    await _firebaseMessaging.getToken().then((String token) {
+      tokenUser = [token];
+    });
+    Map<String, dynamic> map = Map();
     map['prompt'] = reCeipt.text;
     map['barcode'] = urlPhoto1;
     map['phone'] = phoneNumber.text;
-    map['userStatus'] = statusUser;
+    map['statusShop'] = true;
+    map['tokenUser'] = FieldValue.arrayUnion(tokenUser);
+    map['userStatus'] = "admin";
 
     var user = firebaseAuth.currentUser;
     if (user != null) {
-      await user.updateProfile(displayName: name.text,photoURL: urlPhoto);
-      await firestore.collection("member").doc(user.uid).set(map).then((value)=>Navigator.pushReplacementNamed(context, "/home"));
+      await user.updateProfile(displayName: name.text, photoURL: urlPhoto);
+      await firestore.collection("member").doc(user.uid).set(map).then((value) {
+        MaterialPageRoute materialPageRoute =
+            MaterialPageRoute(builder: (BuildContext context) => Home());
+        Navigator.of(context).pushAndRemoveUntil(
+            materialPageRoute, (Route<dynamic> route) => false);
+      });
     }
     print(user);
   }
@@ -151,8 +203,7 @@ class _RegisterState extends State<Register> {
                               width: 150,
                               height: 150,
                             )
-                          : Image.network(
-                              "https://apibsrufood.000webhostapp.com/empty.jpg",
+                          : Image.asset("images/empty.jpg",
                               width: 150),
                       Row(
                         mainAxisSize: MainAxisSize.min,
@@ -164,19 +215,19 @@ class _RegisterState extends State<Register> {
                       ),
                       Text("ข้อมูลร้านค้า"),
                       Divider(),
-                      _createinput(controller: name, hinttext: "ชื่อร้านค้า"),
+                      _createinput(controller: name, hinttext: "ชื่อร้านค้า",maxLength: 50),
                       _createinput(
-                          controller: userController, hinttext: "อีเมล"),
+                          controller: userController, hinttext: "อีเมล",keyboardType:TextInputType.emailAddress),
                       _createinput(
                           controller: passwordController,
                           hinttext: "รหัสผ่าน",
                           isPassword: true),
                       _createinput(
-                          controller: phoneNumber, hinttext: "เบอร์โทรศัพท์"),
+                          controller: phoneNumber, hinttext: "เบอร์โทรศัพท์",keyboardType:TextInputType.number,maxLength: 10),
                       Text("ช่องทางชำระเงิน"),
                       Divider(),
                       _createinput(
-                          controller: reCeipt, hinttext: "หมายเลขบัญชี"),
+                          controller: reCeipt, hinttext: "หมายเลขบัญชี",keyboardType:TextInputType.number,maxLength: 12),
                       SizedBox(
                           width: double.infinity,
                           child: RaisedButton(
@@ -212,12 +263,14 @@ class _RegisterState extends State<Register> {
       {@required TextEditingController controller,
       @required String hinttext,
       TextInputType keyboardType = TextInputType.text,
-      bool isPassword = false}) {
+      bool isPassword = false,
+      int maxLength = 100}) {
     return Container(
       margin: EdgeInsets.symmetric(
         vertical: 8,
       ),
       child: TextFormField(
+        maxLength: maxLength,
         controller: controller,
         keyboardType: keyboardType,
         obscureText: isPassword,

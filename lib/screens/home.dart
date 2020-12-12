@@ -1,4 +1,5 @@
 
+import 'package:badges/badges.dart';
 import 'package:bsrufoods/screens/account.dart';
 import 'package:flutter/material.dart';
 
@@ -12,9 +13,8 @@ class Home extends StatefulWidget {
 }
 class _HomeState extends State<Home> {
 
-List<Widget> shows = [Homelist(),Menu(),Account()];
+List<Widget> shows = [Homelist(),Menu(),null,Account()];
 int _currentIndex = 0;
-  
   Widget showlogo() {
     return Container(
       width: 150.0,
@@ -34,6 +34,7 @@ int _currentIndex = 0;
         selectedItemColor: Color.fromRGBO(255, 255, 255, 1.0),
         currentIndex: _currentIndex, 
         backgroundColor: Color.fromRGBO(255, 51, 247, 1.0),
+        type: BottomNavigationBarType.fixed,
         items: [
           BottomNavigationBarItem(
             icon: new Icon(
@@ -49,6 +50,19 @@ int _currentIndex = 0;
             ),
             title: Text("เมนู"),
           ),
+          BottomNavigationBarItem(
+            icon: Badge(
+            badgeContent: Text('2',style: TextStyle(color: Colors.white),),
+            toAnimate: true,
+            position: BadgePosition(top: -1,start: 33),
+            child: IconButton(
+                icon: Icon(
+                  Icons.notifications,
+                  size:35.0
+                ),
+                onPressed: (){},
+            )
+          ),title:Text("การแจ้งเตือน")),
           BottomNavigationBarItem(
             icon: new Icon(
               Icons.person,

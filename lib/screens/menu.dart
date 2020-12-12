@@ -12,6 +12,7 @@ class _MenuState extends State<Menu> {
         length: 2, child: Scaffold(
       appBar: AppBar(
       centerTitle: true,
+      leading: Text(""),
       bottom: PreferredSize(
               preferredSize: Size.fromHeight(48),
               child: Material(

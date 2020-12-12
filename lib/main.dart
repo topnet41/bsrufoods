@@ -45,7 +45,7 @@ class _SplashScreenState extends State<SplashScreen> {
   void initState() {
     super.initState();
        var user = firebase.currentUser;
-       print("user == ${user}");
+       print("user == $user");
     Future.microtask(() {
       if(user != null){
         Navigator.pushReplacementNamed(context, '/home');
