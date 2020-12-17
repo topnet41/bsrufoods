@@ -1,6 +1,7 @@
 import 'dart:io';
 import 'dart:math';
 
+import 'package:bsrufoods/controller/firestore_controller.dart';
 import 'package:bsrufoods/screens/home.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -9,7 +10,9 @@ import 'package:firebase_storage/firebase_storage.dart';
 
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:intl/intl.dart';
 import 'package:rflutter_alert/rflutter_alert.dart';
+import 'package:select_form_field/select_form_field.dart';
 
 class Register extends StatefulWidget {
   @override
@@ -23,33 +26,73 @@ class _RegisterState extends State<Register> {
   final passwordController = TextEditingController();
   final phoneNumber = TextEditingController();
   final reCeipt = TextEditingController();
+  String bank ;
+  var now = DateTime.now();
+  String getDatetime;
+  final List<Map<String, dynamic>> _items = [
+    {
+      'value': 'ธนาคารไทยพาณิชย์',
+      'label': 'ธนาคารไทยพาณิชย์',
+    },
+    {
+      'value': 'ธนาคารกสิกรไทย',
+      'label': 'ธนาคารกสิกรไทย',
+    },
+    {
+      'value': 'ธนาคารกรุงเทพ',
+      'label': 'ธนาคารกรุงเทพ',
+    },
+    {
+      'value': 'ธนาคารกรุงศรีอยุธยา',
+      'label': 'ธนาคารกรุงศรีอยุธยา',
+    },
+  ];
   FirebaseAuth firebaseAuth = FirebaseAuth.instance;
   FirebaseMessaging _firebaseMessaging = FirebaseMessaging();
+  FirebaseFirestore firestore = FirebaseFirestore.instance;
+  DocumentSnapshot snapshot ;
+  String memberid;
+
+   void getlengthMember()async{
+        int member;
+        final documents = await firestore.collection("member").get();
+        member = documents.docChanges.length+1;
+        print(member);
+        memberid = member.toString();
+   }
 
   final picker = ImagePicker();
+  bool statusBool;
 
   File _image;
   File _imgReceipt;
   String urlPhoto, urlPhoto1;
 
+  @override
+  void initState() { 
+    super.initState();
+    statusBool = false;
+    getlengthMember();
+    // print(memberid);
+  }
+
   void _onSave() {
-    if (_imgReceipt == null) {
+    if (_imgReceipt == null || bank == null) {
       Alert(
-        context: context,
-        type: AlertType.warning,
-        title: "กรุณาเพิ่มบาร์โค้ด", 
-        buttons: [
-              DialogButton(
-                onPressed: (){
-                  Navigator.pop(context);
-                } ,
-                child: Text(
-                  "ตกลง",
-                  style: TextStyle(color: Colors.white, fontSize: 20),
-                ),
-              )
-            ]
-            ).show();
+          context: context,
+          type: AlertType.warning,
+          title: "กรุณาเพิ่มบาร์โค้ด หรือ ระบุธนาคาร",
+          buttons: [
+            DialogButton(
+              onPressed: () {
+                Navigator.pop(context);
+              },
+              child: Text(
+                "ตกลง",
+                style: TextStyle(color: Colors.white, fontSize: 20),
+              ),
+            )
+          ]).show();
     } else {
       if (keyfrom.currentState.validate()) {
         keyfrom.currentState.save();
@@ -64,15 +107,16 @@ class _RegisterState extends State<Register> {
     int i = random.nextInt(100000);
 
     FirebaseStorage firebaseStorage = FirebaseStorage.instance;
-    if(_image != null){
-    await firebaseStorage.ref().child('Member/member$i.jpg').putFile(_image);
-    urlPhoto = await firebaseStorage
-        .ref()
-        .child('Member/member$i.jpg')
-        .getDownloadURL();
-        }else{
-          urlPhoto ="https://firebasestorage.googleapis.com/v0/b/bsrufood.appspot.com/o/Member%2Fbaseline_account_circle_black_48dp.png?alt=media&token=2269f14d-3913-4911-9baa-94b0e615c7a9";
-        }
+    if (_image != null) {
+      await firebaseStorage.ref().child('Member/member$i.jpg').putFile(_image);
+      urlPhoto = await firebaseStorage
+          .ref()
+          .child('Member/member$i.jpg')
+          .getDownloadURL();
+    } else {
+      urlPhoto =
+          "https://firebasestorage.googleapis.com/v0/b/bsrufood.appspot.com/o/Member%2Fbaseline_account_circle_black_48dp.png?alt=media&token=2269f14d-3913-4911-9baa-94b0e615c7a9";
+    }
     await firebaseStorage
         .ref()
         .child('Barcode/member$i.jpg')
@@ -86,6 +130,9 @@ class _RegisterState extends State<Register> {
   }
 
   Future<void> registerThread() async {
+    setState(() {
+      statusBool = true;
+    });
     await firebaseAuth
         .createUserWithEmailAndPassword(
             email: userController.text, password: passwordController.text)
@@ -93,26 +140,36 @@ class _RegisterState extends State<Register> {
       print('Register Success for Email = $userController');
       uploadPictureToStore();
     }).catchError((response) {
+      setState(() {
+        statusBool = false;
+      });
       String title = response.code;
-      String message = response.message;
+      var alertView = {
+          "invalid-email":{
+            "title":"อีเมลไม่ถูกต้อง",
+            "body":"ตัวอย่าง:bsru@email.com"
+          },
+          "email-already-in-use":{
+            "title":"อีเมลนี้มีผู้ใช้งานแล้ว",
+            "body":"ลองกรอกใหม่อีกครั้ง"
+          }
+      };
       Alert(
-        context: context,
-        type: AlertType.info,
-        title: title,
-        desc: message, 
-        buttons: [
-              DialogButton(
-                onPressed: (){
-                  Navigator.pop(context);
-                } ,
-                child: Text(
-                  "ตกลง",
-                  style: TextStyle(color: Colors.white, fontSize: 20),
-                ),
-              )
-            ]
-            ).show();
-      print('title = $title,message = $message');
+          context: context,
+          type: AlertType.info,
+          title: alertView[title]["title"],
+          desc: alertView[title]["body"],
+          buttons: [
+            DialogButton(
+              onPressed: () {
+                Navigator.pop(context);
+              },
+              child: Text(
+                "ตกลง",
+                style: TextStyle(color: Colors.white, fontSize: 20),
+              ),
+            )
+          ]).show();
     });
   }
 
@@ -124,10 +181,13 @@ class _RegisterState extends State<Register> {
       tokenUser = [token];
     });
     Map<String, dynamic> map = Map();
+    map['username'] = name.text;
+    map['userId'] = "${now.year}$memberid";
     map['prompt'] = reCeipt.text;
     map['barcode'] = urlPhoto1;
     map['phone'] = phoneNumber.text;
     map['statusShop'] = true;
+    map['bank'] = bank;
     map['tokenUser'] = FieldValue.arrayUnion(tokenUser);
     map['userStatus'] = "admin";
 
@@ -203,8 +263,7 @@ class _RegisterState extends State<Register> {
                               width: 150,
                               height: 150,
                             )
-                          : Image.asset("images/empty.jpg",
-                              width: 150),
+                          : Image.asset("images/empty.jpg", width: 150),
                       Row(
                         mainAxisSize: MainAxisSize.min,
                         children: [
@@ -215,19 +274,38 @@ class _RegisterState extends State<Register> {
                       ),
                       Text("ข้อมูลร้านค้า"),
                       Divider(),
-                      _createinput(controller: name, hinttext: "ชื่อร้านค้า",maxLength: 50),
                       _createinput(
-                          controller: userController, hinttext: "อีเมล",keyboardType:TextInputType.emailAddress),
+                          controller: name,
+                          hinttext: "ชื่อร้านค้า",
+                          maxLength: 50),
+                      _createinput(
+                          controller: userController,
+                          hinttext: "อีเมล",
+                          keyboardType: TextInputType.emailAddress),
                       _createinput(
                           controller: passwordController,
                           hinttext: "รหัสผ่าน",
                           isPassword: true),
                       _createinput(
-                          controller: phoneNumber, hinttext: "เบอร์โทรศัพท์",keyboardType:TextInputType.number,maxLength: 10),
+                          controller: phoneNumber,
+                          hinttext: "เบอร์โทรศัพท์",
+                          keyboardType: TextInputType.number,
+                          maxLength: 10),
                       Text("ช่องทางชำระเงิน"),
+                      SelectFormField(
+                        type: SelectFormFieldType.dropdown, // or can be dialog
+                        icon: Icon(Icons.account_balance),
+                        labelText: "ธนาคาร",
+                        items: _items,
+                        onChanged: (val){bank = val ;},
+                        onSaved: (val){bank = val ;},
+                      ),
                       Divider(),
                       _createinput(
-                          controller: reCeipt, hinttext: "หมายเลขบัญชี",keyboardType:TextInputType.number,maxLength: 12),
+                          controller: reCeipt,
+                          hinttext: "หมายเลขบัญชี",
+                          keyboardType: TextInputType.number,
+                          maxLength: 12),
                       SizedBox(
                           width: double.infinity,
                           child: RaisedButton(
@@ -248,10 +326,10 @@ class _RegisterState extends State<Register> {
                                 mainAxisSize: MainAxisSize.min,
                                 children: [
                                   Icon(Icons.save_alt),
-                                  Text("บันทึกข้อมูล"),
+                                  statusBool ? CircularProgressIndicator() : Text("บันทึกข้อมูล"),
                                 ],
                               ),
-                              onPressed: () => _onSave())),
+                              onPressed: statusBool ? (){} : () => _onSave())),
                     ],
                   ),
                 )),

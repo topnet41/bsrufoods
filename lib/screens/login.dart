@@ -22,7 +22,6 @@ void _onLogin() {
     keyfrom.currentState.save();
     authController.onLogin(
         email: userController.text, password: passwordController.text);
-    print(passwordController.text);
   }
 }
 
@@ -60,7 +59,7 @@ class _LoginState extends State<Login> {
                           _createinput(
                               controller: userController,
                               hinttext: "E-mail",
-                              isPassword: false),
+                              isPassword: false,keyboardType: TextInputType.emailAddress),
                           _createinput(
                               controller: passwordController,
                               hinttext: "Password",

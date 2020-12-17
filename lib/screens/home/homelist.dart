@@ -14,20 +14,22 @@ class Homelist extends StatefulWidget {
 class _HomelistState extends State<Homelist> {
  
   dynamic url = "https://apibsrufood.000webhostapp.com/data.json";
-
+  bool statusBtnSend;
   @override
   void initState() { 
     super.initState();
     loadData();
+    statusBtnSend = false;
   }
 
   List<MyData> myAllData = [];
   List send = [];
-
+  
   void sendNotification()async{
         await http.get("https://apibsrufood.000webhostapp.com/apiNotification.php?isAdd=true&token=esV46vSMS2uSXFdQ_H7kX3:APA91bFYLbR4jn1yp3N7ASJLa8a5g2J3ahGQ2lc3KfnwBPgwI-FHcaGCTVPM-5W2WgCF2mW65u3Zaf3Ab930kYZ-O43OpVdffgT8PzPlhgcB3DkwHN_W49z3GE0CmHGgJKcrKhLRH0Dq&title=ร้านยายหลา&body=อาหารได้แล้วครับ");
-        Navigator.pop(context);
-        // print("asd");
+        setState(() {
+                    statusBtnSend =false;
+        });
   }
 
   void loadData()async{
@@ -169,10 +171,14 @@ class _HomelistState extends State<Homelist> {
                           title: "ต้องการเสิร์ฟทั้งหมด",
                           buttons: [
               DialogButton(
-                onPressed: (){
+                onPressed: statusBtnSend? (){} : (){
+                  setState(() {
+                    statusBtnSend =true;
+                  });
                   sendNotification();
+                  Navigator.pop(context);
                 } ,
-                child: Text(
+                child: statusBtnSend ? CircularProgressIndicator() : Text(
                   "เสิร์ฟ",
                   style: TextStyle(color: Colors.white, fontSize: 20),
                 ),

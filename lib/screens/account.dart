@@ -1,14 +1,10 @@
-import 'dart:convert';
 
-import 'package:bsrufoods/controller/auth_controller.dart';
-import 'package:bsrufoods/controller/getphoto.dart';
 import 'package:bsrufoods/screens/account/review.dart';
-import 'package:bsrufoods/screens/login.dart';
-import 'package:bsrufoods/screens/setting.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_facebook_login/flutter_facebook_login.dart';
-import 'package:http/http.dart' as http;
 import 'package:rflutter_alert/rflutter_alert.dart';
 
 class Account extends StatefulWidget {
@@ -20,6 +16,8 @@ class Account extends StatefulWidget {
 
 class _AccountState extends State<Account> {
   FirebaseAuth firebase = FirebaseAuth.instance;
+  FirebaseFirestore firestore = FirebaseFirestore.instance;
+  FirebaseMessaging _firebaseMessaging = FirebaseMessaging();
 
   final facebookLogin = FacebookLogin();
   String statusShop = "เปิด";
@@ -43,7 +41,7 @@ class _AccountState extends State<Account> {
                   });
                   logout();
                 },
-                child: statusButton == true ? CircularProgressIndicator() : Text(
+                child: statusButton ? CircularProgressIndicator() : Text(
                   "ตกลง",
                   style: TextStyle(color: Colors.white, fontSize: 20),
                 ),
@@ -61,6 +59,14 @@ class _AccountState extends State<Account> {
   }
 
   Future<void> logout() async {
+    List<String> tokenUser;
+    await _firebaseMessaging.getToken().then((String token) {
+      tokenUser = [token];
+    });
+    Map<String, dynamic> map = Map();
+    map['tokenUser'] = FieldValue.arrayRemove(tokenUser);
+
+    await firestore.collection("member").doc(firebase.currentUser.uid).update(map);
     await facebookLogin.logOut();
     await firebase.signOut();
     Navigator.pushReplacementNamed(context, "/login");
