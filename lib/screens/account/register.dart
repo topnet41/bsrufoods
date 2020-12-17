@@ -51,14 +51,6 @@ class _RegisterState extends State<Register> {
   DocumentSnapshot snapshot ;
   String memberid;
 
-   void getlengthMember()async{
-        int member;
-        final documents = await firestore.collection("member").get();
-        member = documents.docChanges.length+1;
-        print(member);
-        memberid = member.toString();
-   }
-
   final picker = ImagePicker();
   bool statusBool;
 
@@ -70,7 +62,6 @@ class _RegisterState extends State<Register> {
   void initState() { 
     super.initState();
     statusBool = false;
-    getlengthMember();
     // print(memberid);
   }
 
@@ -175,6 +166,11 @@ class _RegisterState extends State<Register> {
     FirebaseAuth firebaseAuth = FirebaseAuth.instance;
     FirebaseFirestore firestore = FirebaseFirestore.instance;
     List<String> tokenUser;
+      int member;
+        final documents = await firestore.collection("member").get();
+        member = documents.docChanges.length+1;
+        print(member);
+        memberid = member.toString();
     await _firebaseMessaging.getToken().then((String token) {
       tokenUser = [token];
     });

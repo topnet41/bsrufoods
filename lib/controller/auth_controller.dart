@@ -55,7 +55,10 @@ class Authcontroller {
         Map<String, dynamic> map = Map();
         map['tokenUser'] = FieldValue.arrayUnion(tokenUser);
 
-        await firestore.collection("member").doc(_firebaseAuth.currentUser.uid).update(map);
+        await firestore
+            .collection("member")
+            .doc(_firebaseAuth.currentUser.uid)
+            .update(map);
         Navigator.popAndPushNamed(_context, "/home");
       } else {
         await facebookLogin.logOut();
@@ -83,7 +86,33 @@ class Authcontroller {
     String photo = dataphoto.picture.data.url;
     await _firebaseAuth
         .signInWithCredential(FacebookAuthProvider.credential(token));
-    await _firebaseAuth.currentUser.updateProfile(photoURL: photo);
-    Navigator.pushReplacementNamed(_context, '/home');
+    final document = await firestore
+        .collection("member")
+        .doc(_firebaseAuth.currentUser.uid)
+        .get();
+    snapshot = document;
+    if (snapshot.exists) {
+      if (snapshot["userStatus"] == "admin") {
+        List<String> tokenUser;
+        await _firebaseMessaging.getToken().then((String token) {
+          tokenUser = [token];
+        });
+        Map<String, dynamic> map = Map();
+        map['tokenUser'] = FieldValue.arrayUnion(tokenUser);
+
+        await firestore
+            .collection("member")
+            .doc(_firebaseAuth.currentUser.uid)
+            .update(map);
+        Navigator.popAndPushNamed(_context, "/home");
+      } else {
+        await facebookLogin.logOut();
+        await _firebaseAuth.signOut();
+        alertNotfould("บัญชีนี้ไม่สามารถใข้งานได้");
+      }
+    } else {
+      await _firebaseAuth.currentUser.updateProfile(photoURL: photo);
+      Navigator.pushReplacementNamed(_context, '/register');
+    }
   }
 }

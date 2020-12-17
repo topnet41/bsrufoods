@@ -19,9 +19,7 @@ class RegisterFb extends StatefulWidget {
 
 class _RegisterFbState extends State<RegisterFb> {
     final keyfrom = GlobalKey<FormState>();
-  final name = TextEditingController();
-  final userController = TextEditingController();
-  final passwordController = TextEditingController();
+  
   final phoneNumber = TextEditingController();
   final reCeipt = TextEditingController();
   String bank ;
@@ -51,13 +49,6 @@ class _RegisterFbState extends State<RegisterFb> {
   DocumentSnapshot snapshot ;
   String memberid;
 
-   void getlengthMember()async{
-        int member;
-        final documents = await firestore.collection("member").get();
-        member = documents.docChanges.length+1;
-        print(member);
-        memberid = member.toString();
-   }
 
   final picker = ImagePicker();
   bool statusBool;
@@ -70,8 +61,7 @@ class _RegisterFbState extends State<RegisterFb> {
   void initState() { 
     super.initState();
     statusBool = false;
-    
-    // print(memberid);
+    print(memberid);
   }
 
   void _onSave() {
@@ -94,8 +84,7 @@ class _RegisterFbState extends State<RegisterFb> {
     } else {
       if (keyfrom.currentState.validate()) {
         keyfrom.currentState.save();
-        registerThread();
-        print(passwordController.text);
+          uploadPictureToStore();
       }
     }
   }
@@ -123,64 +112,26 @@ class _RegisterFbState extends State<RegisterFb> {
         .ref()
         .child('Barcode/member$i.jpg')
         .getDownloadURL();
-
-    await setupDisplayName();
+    
+    await setupData();
   }
 
-  Future<void> registerThread() async {
-    setState(() {
-      statusBool = true;
-    });
-    await firebaseAuth
-        .createUserWithEmailAndPassword(
-            email: userController.text, password: passwordController.text)
-        .then((response) {
-      print('Register Success for Email = $userController');
-      uploadPictureToStore();
-    }).catchError((response) {
-      setState(() {
-        statusBool = false;
-      });
-      String title = response.code;
-      var alertView = {
-          "invalid-email":{
-            "title":"อีเมลไม่ถูกต้อง",
-            "body":"ตัวอย่าง:bsru@email.com"
-          },
-          "email-already-in-use":{
-            "title":"อีเมลนี้มีผู้ใช้งานแล้ว",
-            "body":"ลองกรอกใหม่อีกครั้ง"
-          }
-      };
-      Alert(
-          context: context,
-          type: AlertType.info,
-          title: alertView[title]["title"],
-          desc: alertView[title]["body"],
-          buttons: [
-            DialogButton(
-              onPressed: () {
-                Navigator.pop(context);
-              },
-              child: Text(
-                "ตกลง",
-                style: TextStyle(color: Colors.white, fontSize: 20),
-              ),
-            )
-          ]).show();
-    });
-  }
+  
 
-  Future<void> setupDisplayName() async {
+  Future<void> setupData() async {
     FirebaseAuth firebaseAuth = FirebaseAuth.instance;
     FirebaseFirestore firestore = FirebaseFirestore.instance;
     List<String> tokenUser;
+    int member;
+        final documents = await firestore.collection("member").get();
+        member = documents.docChanges.length+1;
+        print(member);
+        memberid = member.toString();
     await _firebaseMessaging.getToken().then((String token) {
       tokenUser = [token];
      });
-     getlengthMember();
     Map<String, dynamic> map = Map();
-    map['username'] = name.text;
+    map['username'] = firebaseAuth.currentUser.displayName;
     map['userId'] = "${now.year}$memberid";
     map['prompt'] = reCeipt.text;
     map['barcode'] = urlPhoto1;
@@ -192,7 +143,6 @@ class _RegisterFbState extends State<RegisterFb> {
 
     var user = firebaseAuth.currentUser;
     if (user != null) {
-      await user.updateProfile(displayName: name.text, photoURL: urlPhoto);
       await firestore.collection("member").doc(user.uid).set(map).then((value) {
         MaterialPageRoute materialPageRoute =
             MaterialPageRoute(builder: (BuildContext context) => Home());
@@ -255,37 +205,8 @@ class _RegisterFbState extends State<RegisterFb> {
                 child: SingleChildScrollView(
                   child: Column(
                     children: [
-                      Text("รูปภาพร้านค้า"),
-                      Divider(),
-                      _image != null
-                          ? Image.file(
-                              _image,
-                              width: 150,
-                              height: 150,
-                            )
-                          : Image.asset("images/empty.jpg", width: 150),
-                      Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          cameraButton(),
-                          Padding(padding: EdgeInsets.only(right: 70)),
-                          galleryButton()
-                        ],
-                      ),
                       Text("ข้อมูลร้านค้า"),
                       Divider(),
-                      _createinput(
-                          controller: name,
-                          hinttext: "ชื่อร้านค้า",
-                          maxLength: 50),
-                      _createinput(
-                          controller: userController,
-                          hinttext: "อีเมล",
-                          keyboardType: TextInputType.emailAddress),
-                      _createinput(
-                          controller: passwordController,
-                          hinttext: "รหัสผ่าน",
-                          isPassword: true),
                       _createinput(
                           controller: phoneNumber,
                           hinttext: "เบอร์โทรศัพท์",
