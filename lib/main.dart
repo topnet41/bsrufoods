@@ -4,6 +4,7 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 
+import 'screens/account/register_fb.dart';
 import 'screens/home.dart';
 
 void main(List<String> args) async {
@@ -27,7 +28,8 @@ class Asp extends StatelessWidget {
         routes: {
           '/': (_) => SplashScreen(),
           '/login': (_) => Login(),
-          '/home': (_) => Home()
+          '/home': (_) => Home(),
+          '/register': (_) => RegisterFb()
         });
   }
 }
