@@ -165,6 +165,8 @@ class _RegisterState extends State<Register> {
   Future<void> setupDisplayName() async {
     FirebaseAuth firebaseAuth = FirebaseAuth.instance;
     FirebaseFirestore firestore = FirebaseFirestore.instance;
+    var user = firebaseAuth.currentUser;
+    DocumentReference ref = firestore.collection('menus').doc(user.uid);
     List<String> tokenUser;
       int member;
         final documents = await firestore.collection("member").get();
@@ -184,8 +186,8 @@ class _RegisterState extends State<Register> {
     map['bank'] = bank;
     map['tokenUser'] = FieldValue.arrayUnion(tokenUser);
     map['userStatus'] = "admin";
-
-    var user = firebaseAuth.currentUser;
+    map['menus'] = ref;
+    
     if (user != null) {
       await user.updateProfile(displayName: name.text, photoURL: urlPhoto);
       await firestore.collection("member").doc(user.uid).set(map).then((value) {

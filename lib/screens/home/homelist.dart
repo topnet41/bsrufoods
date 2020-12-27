@@ -1,5 +1,6 @@
 import 'dart:convert';
 
+import 'package:bsrufoods/screens/home/order.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:rflutter_alert/rflutter_alert.dart';
@@ -97,30 +98,8 @@ class _HomelistState extends State<Homelist> {
     return FloatingActionButton.extended(
       heroTag: null,
       onPressed: () {
-        Alert(
-            context: context,
-            title: "รับออเดอร์",
-            content: Column(
-              children: <Widget>[
-                TextField(
-                  decoration: InputDecoration(
-                    icon: Icon(Icons.restaurant_menu),
-                    labelText: 'กรอกหมายเลขออเดอร์',
-                  ),
-                  keyboardType: TextInputType.number,
-                ),
-              ],
-            ),
-            buttons: [
-              DialogButton(
-                onPressed: () => Navigator.pop(context),
-                child: Text(
-                  "ตกลง",
-                  style: TextStyle(color: Colors.white, fontSize: 20),
-                ),
-                color: Color.fromRGBO(255, 51, 247, 1),
-              ),
-            ]).show();
+        MaterialPageRoute route = MaterialPageRoute(builder: (BuildContext context)=> Order());
+        Navigator.push(context, route);
       },
       tooltip: 'increment',
       label: Text("รับออเดอร์"),
