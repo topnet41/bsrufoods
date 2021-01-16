@@ -1,6 +1,8 @@
 import 'dart:convert';
 
 import 'package:bsrufoods/screens/home/order.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:rflutter_alert/rflutter_alert.dart';
@@ -13,6 +15,10 @@ class Homelist extends StatefulWidget {
 }
 
 class _HomelistState extends State<Homelist> {
+  FirebaseAuth _firebaseAuth = FirebaseAuth.instance;
+  FirebaseFirestore firestore = FirebaseFirestore.instance;
+  DocumentSnapshot snapshot;
+
  
   dynamic url = "https://apibsrufood.000webhostapp.com/data.json";
   bool statusBtnSend;

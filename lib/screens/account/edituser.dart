@@ -12,20 +12,20 @@ import 'package:image_picker/image_picker.dart';
 import 'package:rflutter_alert/rflutter_alert.dart';
 import 'package:select_form_field/select_form_field.dart';
 
-class Register extends StatefulWidget {
+class EditUser extends StatefulWidget {
   @override
-  _RegisterState createState() => _RegisterState();
+  _EditUserState createState() => _EditUserState();
 }
 
-class _RegisterState extends State<Register> {
+class _EditUserState extends State<EditUser> {
   final keyfrom = GlobalKey<FormState>();
   final name = TextEditingController();
   final userController = TextEditingController();
-  final passwordController = TextEditingController();
   final phoneNumber = TextEditingController();
   final reCeipt = TextEditingController();
-  String bank ;
+  String bank,bankGet;
   var now = DateTime.now();
+  var documentUser;
   String getDatetime;
   final List<Map<String, dynamic>> _items = [
     {
@@ -46,9 +46,7 @@ class _RegisterState extends State<Register> {
     },
   ];
   FirebaseAuth firebaseAuth = FirebaseAuth.instance;
-  FirebaseMessaging _firebaseMessaging = FirebaseMessaging();
   FirebaseFirestore firestore = FirebaseFirestore.instance;
-  String memberid;
 
   final picker = ImagePicker();
   bool statusBool;
@@ -58,36 +56,44 @@ class _RegisterState extends State<Register> {
   String urlPhoto, urlPhoto1;
 
   @override
-  void initState() { 
+  void initState() {
     super.initState();
     statusBool = false;
+    getUserdata();
     // print(memberid);
   }
 
+  void getUserdata() async {
+     documentUser = await firestore
+        .collection("member")
+        .doc(firebaseAuth.currentUser.uid)
+        .get().then((value) {
+          setState(() {
+            userController.text = firebaseAuth.currentUser.email;
+            name.text = firebaseAuth.currentUser.displayName;
+            urlPhoto = firebaseAuth.currentUser.photoURL;
+            urlPhoto1 = value["barcode"];
+            phoneNumber.text = value["phone"];
+            reCeipt.text = value["prompt"] ; 
+            bank = value["bank"];
+            bankGet = value["bank"];
+          });
+        });
+        
+  }
+
+  Widget getBarcode(){
+    return urlPhoto1 == null ? CircularProgressIndicator(): Image.network(urlPhoto1,width: 100,);
+  }
+
   void _onSave() {
-    if (_imgReceipt == null || bank == null) {
-      Alert(
-          context: context,
-          type: AlertType.warning,
-          title: "กรุณาเพิ่มบาร์โค้ด หรือ ระบุธนาคาร",
-          buttons: [
-            DialogButton(
-              onPressed: () {
-                Navigator.pop(context);
-              },
-              child: Text(
-                "ตกลง",
-                style: TextStyle(color: Colors.white, fontSize: 20),
-              ),
-            )
-          ]).show();
-    } else {
+
       if (keyfrom.currentState.validate()) {
         keyfrom.currentState.save();
+        
         registerThread();
-        print(passwordController.text);
+        
       }
-    }
   }
 
   Future<void> uploadPictureToStore() async {
@@ -95,24 +101,26 @@ class _RegisterState extends State<Register> {
     int i = random.nextInt(100000);
 
     FirebaseStorage firebaseStorage = FirebaseStorage.instance;
-    if (_image != null) {
+    if (_image != null || _imgReceipt != null) {
       await firebaseStorage.ref().child('Member/member$i.jpg').putFile(_image);
       urlPhoto = await firebaseStorage
           .ref()
           .child('Member/member$i.jpg')
           .getDownloadURL();
+
+      await firebaseStorage
+        .ref()
+        .child('Barcode/member$i.jpg')
+        .putFile(_imgReceipt);
+      urlPhoto1 = await firebaseStorage
+        .ref()
+        .child('Barcode/member$i.jpg')
+        .getDownloadURL();    
     } else {
       urlPhoto =
           "https://firebasestorage.googleapis.com/v0/b/bsrufood.appspot.com/o/Member%2Fbaseline_account_circle_black_48dp.png?alt=media&token=2269f14d-3913-4911-9baa-94b0e615c7a9";
     }
-    await firebaseStorage
-        .ref()
-        .child('Barcode/member$i.jpg')
-        .putFile(_imgReceipt);
-    urlPhoto1 = await firebaseStorage
-        .ref()
-        .child('Barcode/member$i.jpg')
-        .getDownloadURL();
+    
 
     await setupDisplayName();
   }
@@ -121,79 +129,69 @@ class _RegisterState extends State<Register> {
     setState(() {
       statusBool = true;
     });
-    await firebaseAuth
-        .createUserWithEmailAndPassword(
-            email: userController.text, password: passwordController.text)
-        .then((response) {
-      print('Register Success for Email = $userController');
+    if (firebaseAuth.currentUser.email == userController.text) {
       uploadPictureToStore();
-    }).catchError((response) {
-      setState(() {
-        statusBool = false;
+    } else {
+      await firebaseAuth.currentUser
+          .updateEmail(userController.text)
+          .then((response) {
+        print('Register Success for Email = $userController');
+        uploadPictureToStore();
+      }).catchError((response) {
+        setState(() {
+          statusBool = false;
+        });
+        String title = response.code;
+        print(title);
+        // var alertView = {
+        //   "invalid-email": {
+        //     "title": "อีเมลไม่ถูกต้อง",
+        //     "body": "ตัวอย่าง:bsru@email.com"
+        //   },
+        //   "email-already-in-use": {
+        //     "title": "อีเมลนี้มีผู้ใช้งานแล้ว",
+        //     "body": "ลองกรอกใหม่อีกครั้ง"
+        //   }
+        // };
+        // Alert(
+        //     context: context,
+        //     type: AlertType.info,
+        //     title: alertView[title]["title"],
+        //     desc: alertView[title]["body"],
+        //     buttons: [
+        //       DialogButton(
+        //         onPressed: () {
+        //           Navigator.pop(context);
+        //         },
+        //         child: Text(
+        //           "ตกลง",
+        //           style: TextStyle(color: Colors.white, fontSize: 20),
+        //         ),
+        //       )
+        //     ]).show();
       });
-      String title = response.code;
-      var alertView = {
-          "invalid-email":{
-            "title":"อีเมลไม่ถูกต้อง",
-            "body":"ตัวอย่าง:bsru@email.com"
-          },
-          "email-already-in-use":{
-            "title":"อีเมลนี้มีผู้ใช้งานแล้ว",
-            "body":"ลองกรอกใหม่อีกครั้ง"
-          }
-      };
-      Alert(
-          context: context,
-          type: AlertType.info,
-          title: alertView[title]["title"],
-          desc: alertView[title]["body"],
-          buttons: [
-            DialogButton(
-              onPressed: () {
-                Navigator.pop(context);
-              },
-              child: Text(
-                "ตกลง",
-                style: TextStyle(color: Colors.white, fontSize: 20),
-              ),
-            )
-          ]).show();
-    });
+    }
   }
 
   Future<void> setupDisplayName() async {
     FirebaseAuth firebaseAuth = FirebaseAuth.instance;
     FirebaseFirestore firestore = FirebaseFirestore.instance;
     var user = firebaseAuth.currentUser;
-    DocumentReference ref = firestore.collection('menus').doc(user.uid);
-    List<String> tokenUser;
-      int member;
-        final documents = await firestore.collection("member").get();
-        member = documents.docChanges.length+1;
-        print(member);
-        memberid = member.toString();
-    await _firebaseMessaging.getToken().then((String token) {
-      tokenUser = [token];
-    });
+    if (bank == "") {
+          bank = bankGet;
+      }
     Map<String, dynamic> map = Map();
     map['username'] = name.text;
-    map['userId'] = "${now.year}$memberid";
     map['prompt'] = reCeipt.text;
     map['barcode'] = urlPhoto1;
     map['phone'] = phoneNumber.text;
-    map['statusShop'] = true;
     map['bank'] = bank;
-    map['tokenUser'] = FieldValue.arrayUnion(tokenUser);
-    map['userStatus'] = "admin";
-    map['menus'] = ref;
     
+
     if (user != null) {
       await user.updateProfile(displayName: name.text, photoURL: urlPhoto);
-      await firestore.collection("member").doc(user.uid).set(map).then((value) {
-        MaterialPageRoute materialPageRoute =
-            MaterialPageRoute(builder: (BuildContext context) => Home());
-        Navigator.of(context).pushAndRemoveUntil(
-            materialPageRoute, (Route<dynamic> route) => false);
+      await firestore.collection("member").doc(user.uid).update(map).then((value) {
+        Navigator.of(context).pop();
       });
     }
     print(user);
@@ -258,7 +256,7 @@ class _RegisterState extends State<Register> {
                               width: 150,
                               height: 150,
                             )
-                          : Image.asset("images/empty.jpg", width: 150),
+                          : urlPhoto == null ? Text("กำลังโหลดรูป") : Image.network(urlPhoto, width: 64),
                       Row(
                         mainAxisSize: MainAxisSize.min,
                         children: [
@@ -273,14 +271,10 @@ class _RegisterState extends State<Register> {
                           controller: name,
                           hinttext: "ชื่อร้านค้า",
                           maxLength: 50),
-                      _createinput(
-                          controller: userController,
-                          hinttext: "อีเมล",
-                          keyboardType: TextInputType.emailAddress),
-                      _createinput(
-                          controller: passwordController,
-                          hinttext: "รหัสผ่าน",
-                          isPassword: true),
+                      // _createinput(
+                      //     controller: userController,
+                      //     hinttext: "อีเมล",
+                      //     keyboardType: TextInputType.emailAddress),
                       _createinput(
                           controller: phoneNumber,
                           hinttext: "เบอร์โทรศัพท์",
@@ -290,10 +284,14 @@ class _RegisterState extends State<Register> {
                       SelectFormField(
                         type: SelectFormFieldType.dropdown, // or can be dialog
                         icon: Icon(Icons.account_balance),
-                        labelText: "ธนาคาร",
+                        labelText: bank,
                         items: _items,
-                        onChanged: (val){bank = val ;},
-                        onSaved: (val){bank = val ;},
+                        onChanged: (val) {
+                          bank = val;
+                        },
+                        onSaved: (val) {
+                          bank = val;
+                        },
                       ),
                       Divider(),
                       _createinput(
@@ -301,6 +299,7 @@ class _RegisterState extends State<Register> {
                           hinttext: "หมายเลขบัญชี",
                           keyboardType: TextInputType.number,
                           maxLength: 12),
+                     getBarcode(),
                       SizedBox(
                           width: double.infinity,
                           child: RaisedButton(
@@ -321,10 +320,12 @@ class _RegisterState extends State<Register> {
                                 mainAxisSize: MainAxisSize.min,
                                 children: [
                                   Icon(Icons.save_alt),
-                                  statusBool ? CircularProgressIndicator() : Text("บันทึกข้อมูล"),
+                                  statusBool
+                                      ? CircularProgressIndicator()
+                                      : Text("บันทึกข้อมูล"),
                                 ],
                               ),
-                              onPressed: statusBool ? (){} : () => _onSave())),
+                              onPressed: statusBool ? () {} : () => _onSave())),
                     ],
                   ),
                 )),

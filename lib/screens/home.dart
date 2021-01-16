@@ -1,6 +1,6 @@
-
 import 'package:badges/badges.dart';
 import 'package:bsrufoods/screens/account.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 
 import 'home/homelist.dart';
@@ -12,6 +12,15 @@ class Home extends StatefulWidget {
   _HomeState createState() => _HomeState();
 }
 class _HomeState extends State<Home> {
+  FirebaseFirestore firestore = FirebaseFirestore.instance;
+  var items;
+  CollectionReference order ;
+
+    @override
+    void initState() { 
+      super.initState();
+    }
+
 
 List<Widget> shows = [Homelist(),Menu(),null,Account()];
 int _currentIndex = 0;
@@ -28,7 +37,7 @@ int _currentIndex = 0;
      _currentIndex = index;
    });
  }
-  Widget buttomlist() {
+  Widget buttomlist(int noti) {
     return BottomNavigationBar(
         onTap: onTabTapped, // new
         selectedItemColor: Color.fromRGBO(255, 255, 255, 1.0),
@@ -52,7 +61,8 @@ int _currentIndex = 0;
           ),
           BottomNavigationBarItem(
             icon: Badge(
-            badgeContent: Text('2',style: TextStyle(color: Colors.white),),
+            badgeContent: noti == 0 ? Text("0",style: TextStyle(color: Colors.white)) 
+            : Text(noti.toString(),style: TextStyle(color: Colors.white),),
             toAnimate: true,
             position: BadgePosition(top: -1,start: 33),
             child: IconButton(
@@ -75,13 +85,18 @@ int _currentIndex = 0;
 
   @override
   Widget build(BuildContext context) {
+    return StreamBuilder<QuerySnapshot>(
+      stream: firestore.collection('orders').where("userId",isEqualTo: "20202").where("staOrder",isEqualTo: true).snapshots(),
+      builder: (BuildContext context, AsyncSnapshot<QuerySnapshot> snapshot) {
+        print(snapshot.data.docs.length);
     return Scaffold(
-      bottomNavigationBar: buttomlist(),
+      bottomNavigationBar: buttomlist(snapshot.data.docs.length),
       body: SafeArea(
         child: Center(
           child: shows[_currentIndex],
         ),
       ),
     );
+      });
   }
 }

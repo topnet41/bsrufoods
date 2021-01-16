@@ -1,4 +1,5 @@
 import 'package:bsrufoods/screens/login.dart';
+import 'package:bsrufoods/screens/menu.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
@@ -29,6 +30,7 @@ class Asp extends StatelessWidget {
           '/': (_) => SplashScreen(),
           '/login': (_) => Login(),
           '/home': (_) => Home(),
+          '/menu': (_) => Menu(),
           '/register': (_) => RegisterFb()
         });
   }
