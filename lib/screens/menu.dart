@@ -15,8 +15,7 @@ class Menu extends StatefulWidget {
 class _MenuState extends State<Menu> {
   FirebaseAuth _firebaseAuth = FirebaseAuth.instance;
   FirebaseFirestore firestore = FirebaseFirestore.instance;
-  DocumentSnapshot snapshot;
-  DocumentSnapshot menu ;
+  DocumentSnapshot snapshot,menu;
   int a ;
 
   void getdata() async {
@@ -43,7 +42,7 @@ class _MenuState extends State<Menu> {
     getdata();
   }
 
-  Widget showAllMenu() {
+  Widget showAllMenu(bool statusFood) {
     return menu == null
         ? Center(
             child: Text(
@@ -52,16 +51,16 @@ class _MenuState extends State<Menu> {
           ))
         : ListView.separated(
             itemCount: menu["menudetail"].length,
-            separatorBuilder: (context, index) => Divider(),
+            separatorBuilder: (context, index) => menu["menudetail"][(a-1)-index]["status"] == statusFood ? Divider() :Container(),
             itemBuilder: (context, index) {
-              return ListTile(
+              return menu["menudetail"][(a-1)-index]["status"] == statusFood ? ListTile(
                 title: Text(menu["menudetail"][(a-1)-index]["name"]),
                 trailing: menu["menudetail"][(a-1)-index]["status"] ? Text("เปิด") : Text("ปิด"),
                 onTap: () { 
                   MaterialPageRoute route = MaterialPageRoute(builder: (BuildContext context)=>Editmenu((a-1)-index, menu["menudetail"],menu["menudetail"]),);
                   Navigator.push(context, route).then((value) => setState(() {getdata();}));
                 },
-              );
+              ) : Container();
             });
   }
 
@@ -99,8 +98,8 @@ class _MenuState extends State<Menu> {
         ),
         body: TabBarView(
           children: [
-            showAllMenu(),
-            Icon(Icons.directions_transit),
+            showAllMenu(true),
+            showAllMenu(false),
           ],
         ),
         floatingActionButton: FloatingActionButton(

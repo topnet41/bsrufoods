@@ -44,6 +44,10 @@ class _RegisterState extends State<Register> {
       'value': 'ธนาคารกรุงศรีอยุธยา',
       'label': 'ธนาคารกรุงศรีอยุธยา',
     },
+    {
+      'value': 'พร้อมเพย์',
+      'label': 'พร้อมเพย์',
+    }
   ];
   FirebaseAuth firebaseAuth = FirebaseAuth.instance;
   FirebaseMessaging _firebaseMessaging = FirebaseMessaging();
@@ -62,6 +66,12 @@ class _RegisterState extends State<Register> {
     super.initState();
     statusBool = false;
     // print(memberid);
+  }
+
+  Widget getBarcode() {
+    return _imgReceipt != null
+        ? Image.file(_imgReceipt, width: 100)
+        : CircularProgressIndicator();
   }
 
   void _onSave() {
@@ -175,6 +185,7 @@ class _RegisterState extends State<Register> {
     await _firebaseMessaging.getToken().then((String token) {
       tokenUser = [token];
     });
+    num count = 5;
     Map<String, dynamic> map = Map();
     map['username'] = name.text;
     map['userId'] = "${now.year}$memberid";
@@ -183,9 +194,12 @@ class _RegisterState extends State<Register> {
     map['phone'] = phoneNumber.text;
     map['statusShop'] = true;
     map['bank'] = bank;
+    map['cash'] = true;
+    map['orderCount'] = count;
     map['tokenUser'] = FieldValue.arrayUnion(tokenUser);
     map['userStatus'] = "admin";
     map['menus'] = ref;
+    map['profile'] = urlPhoto;
     
     if (user != null) {
       await user.updateProfile(displayName: name.text, photoURL: urlPhoto);
@@ -301,6 +315,7 @@ class _RegisterState extends State<Register> {
                           hinttext: "หมายเลขบัญชี",
                           keyboardType: TextInputType.number,
                           maxLength: 12),
+                          getBarcode(),
                       SizedBox(
                           width: double.infinity,
                           child: RaisedButton(

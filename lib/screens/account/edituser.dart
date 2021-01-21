@@ -23,7 +23,7 @@ class _EditUserState extends State<EditUser> {
   final userController = TextEditingController();
   final phoneNumber = TextEditingController();
   final reCeipt = TextEditingController();
-  String bank,bankGet;
+  String bank, bankGet;
   var now = DateTime.now();
   var documentUser;
   String getDatetime;
@@ -44,6 +44,10 @@ class _EditUserState extends State<EditUser> {
       'value': 'ธนาคารกรุงศรีอยุธยา',
       'label': 'ธนาคารกรุงศรีอยุธยา',
     },
+    {
+      'value': 'พร้อมเพย์',
+      'label': 'พร้อมเพย์',
+    }
   ];
   FirebaseAuth firebaseAuth = FirebaseAuth.instance;
   FirebaseFirestore firestore = FirebaseFirestore.instance;
@@ -64,36 +68,41 @@ class _EditUserState extends State<EditUser> {
   }
 
   void getUserdata() async {
-     documentUser = await firestore
+    documentUser = await firestore
         .collection("member")
         .doc(firebaseAuth.currentUser.uid)
-        .get().then((value) {
-          setState(() {
-            userController.text = firebaseAuth.currentUser.email;
-            name.text = firebaseAuth.currentUser.displayName;
-            urlPhoto = firebaseAuth.currentUser.photoURL;
-            urlPhoto1 = value["barcode"];
-            phoneNumber.text = value["phone"];
-            reCeipt.text = value["prompt"] ; 
-            bank = value["bank"];
-            bankGet = value["bank"];
-          });
-        });
-        
+        .get()
+        .then((value) {
+      setState(() {
+        userController.text = firebaseAuth.currentUser.email;
+        name.text = firebaseAuth.currentUser.displayName;
+        urlPhoto = firebaseAuth.currentUser.photoURL;
+        urlPhoto1 = value["barcode"];
+        phoneNumber.text = value["phone"];
+        reCeipt.text = value["prompt"];
+        bank = value["bank"];
+        bankGet = value["bank"];
+      });
+    });
   }
 
-  Widget getBarcode(){
-    return urlPhoto1 == null ? CircularProgressIndicator(): Image.network(urlPhoto1,width: 100,);
+  Widget getBarcode() {
+    return _imgReceipt != null
+        ? Image.file(_imgReceipt, width: 100)
+        : urlPhoto1 == null
+            ? Text("กำลังโหลดรูป")
+            : Image.network(
+                urlPhoto1,
+                width: 100,
+              );
   }
 
   void _onSave() {
+    if (keyfrom.currentState.validate()) {
+      keyfrom.currentState.save();
 
-      if (keyfrom.currentState.validate()) {
-        keyfrom.currentState.save();
-        
-        registerThread();
-        
-      }
+      registerThread();
+    }
   }
 
   Future<void> uploadPictureToStore() async {
@@ -101,26 +110,24 @@ class _EditUserState extends State<EditUser> {
     int i = random.nextInt(100000);
 
     FirebaseStorage firebaseStorage = FirebaseStorage.instance;
-    if (_image != null || _imgReceipt != null) {
+    if (_image != null) {
       await firebaseStorage.ref().child('Member/member$i.jpg').putFile(_image);
       urlPhoto = await firebaseStorage
           .ref()
           .child('Member/member$i.jpg')
           .getDownloadURL();
-
-      await firebaseStorage
-        .ref()
-        .child('Barcode/member$i.jpg')
-        .putFile(_imgReceipt);
-      urlPhoto1 = await firebaseStorage
-        .ref()
-        .child('Barcode/member$i.jpg')
-        .getDownloadURL();    
-    } else {
-      urlPhoto =
-          "https://firebasestorage.googleapis.com/v0/b/bsrufood.appspot.com/o/Member%2Fbaseline_account_circle_black_48dp.png?alt=media&token=2269f14d-3913-4911-9baa-94b0e615c7a9";
     }
-    
+    if (_imgReceipt != null) {
+      await firebaseStorage
+          .ref()
+          .child('Barcode/member$i.jpg')
+          .putFile(_imgReceipt);
+
+      urlPhoto1 = await firebaseStorage
+          .ref()
+          .child('Barcode/member$i.jpg')
+          .getDownloadURL();
+    }
 
     await setupDisplayName();
   }
@@ -178,19 +185,23 @@ class _EditUserState extends State<EditUser> {
     FirebaseFirestore firestore = FirebaseFirestore.instance;
     var user = firebaseAuth.currentUser;
     if (bank == "") {
-          bank = bankGet;
-      }
+      bank = bankGet;
+    }
     Map<String, dynamic> map = Map();
     map['username'] = name.text;
     map['prompt'] = reCeipt.text;
+    map['profile'] = urlPhoto;
     map['barcode'] = urlPhoto1;
     map['phone'] = phoneNumber.text;
     map['bank'] = bank;
-    
 
     if (user != null) {
       await user.updateProfile(displayName: name.text, photoURL: urlPhoto);
-      await firestore.collection("member").doc(user.uid).update(map).then((value) {
+      await firestore
+          .collection("member")
+          .doc(user.uid)
+          .update(map)
+          .then((value) {
         Navigator.of(context).pop();
       });
     }
@@ -256,7 +267,9 @@ class _EditUserState extends State<EditUser> {
                               width: 150,
                               height: 150,
                             )
-                          : urlPhoto == null ? Text("กำลังโหลดรูป") : Image.network(urlPhoto, width: 64),
+                          : urlPhoto == null
+                              ? Text("กำลังโหลดรูป")
+                              : Image.network(urlPhoto, width: 64),
                       Row(
                         mainAxisSize: MainAxisSize.min,
                         children: [
@@ -299,7 +312,7 @@ class _EditUserState extends State<EditUser> {
                           hinttext: "หมายเลขบัญชี",
                           keyboardType: TextInputType.number,
                           maxLength: 12),
-                     getBarcode(),
+                      getBarcode(),
                       SizedBox(
                           width: double.infinity,
                           child: RaisedButton(

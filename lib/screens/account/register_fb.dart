@@ -42,6 +42,10 @@ class _RegisterFbState extends State<RegisterFb> {
       'value': 'ธนาคารกรุงศรีอยุธยา',
       'label': 'ธนาคารกรุงศรีอยุธยา',
     },
+    {
+      'value': 'พร้อมเพย์',
+      'label': 'พร้อมเพย์',
+    }
   ];
   FirebaseAuth firebaseAuth = FirebaseAuth.instance;
   FirebaseMessaging _firebaseMessaging = FirebaseMessaging();
@@ -62,6 +66,12 @@ class _RegisterFbState extends State<RegisterFb> {
     super.initState();
     statusBool = false;
     print(memberid);
+  }
+
+  Widget getBarcode() {
+    return _imgReceipt != null
+        ? Image.file(_imgReceipt, width: 100)
+        : CircularProgressIndicator();
   }
 
   void _onSave() {
@@ -121,6 +131,7 @@ class _RegisterFbState extends State<RegisterFb> {
   Future<void> setupData() async {
     FirebaseAuth firebaseAuth = FirebaseAuth.instance;
     FirebaseFirestore firestore = FirebaseFirestore.instance;
+    DocumentReference ref = firestore.collection('menus').doc(firebaseAuth.currentUser.uid);
     List<String> tokenUser;
     int member;
         final documents = await firestore.collection("member").get();
@@ -130,6 +141,7 @@ class _RegisterFbState extends State<RegisterFb> {
     await _firebaseMessaging.getToken().then((String token) {
       tokenUser = [token];
      });
+    num count = 5;
     Map<String, dynamic> map = Map();
     map['username'] = firebaseAuth.currentUser.displayName;
     map['userId'] = "${now.year}$memberid";
@@ -138,8 +150,12 @@ class _RegisterFbState extends State<RegisterFb> {
     map['phone'] = phoneNumber.text;
     map['statusShop'] = true;
     map['bank'] = bank;
+    map['cash'] = true;
+    map['orderCount'] = count;
     map['tokenUser'] = FieldValue.arrayUnion(tokenUser);
     map['userStatus'] = "admin";
+    map['menus'] = ref;
+    map['profile'] = urlPhoto;
 
     var user = firebaseAuth.currentUser;
     if (user != null) {
@@ -222,6 +238,7 @@ class _RegisterFbState extends State<RegisterFb> {
                         onSaved: (val){bank = val ;},
                       ),
                       Divider(),
+                      getBarcode(),
                       _createinput(
                           controller: reCeipt,
                           hinttext: "หมายเลขบัญชี",

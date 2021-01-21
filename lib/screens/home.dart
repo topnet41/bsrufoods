@@ -1,6 +1,7 @@
 import 'package:badges/badges.dart';
 import 'package:bsrufoods/screens/account.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 
 import 'home/homelist.dart';
@@ -12,13 +13,24 @@ class Home extends StatefulWidget {
   _HomeState createState() => _HomeState();
 }
 class _HomeState extends State<Home> {
+  FirebaseAuth auth = FirebaseAuth.instance;
   FirebaseFirestore firestore = FirebaseFirestore.instance;
   var items;
+  String shopid;
   CollectionReference order ;
+
+    void getUser()async{
+      await firestore.collection("member").doc(auth.currentUser.uid).get().then((value) {
+          setState(() {
+              shopid = value["userId"];
+          });
+      });
+    }
 
     @override
     void initState() { 
       super.initState();
+      getUser();
     }
 
 
@@ -86,9 +98,9 @@ int _currentIndex = 0;
   @override
   Widget build(BuildContext context) {
     return StreamBuilder<QuerySnapshot>(
-      stream: firestore.collection('orders').where("userId",isEqualTo: "20202").where("staOrder",isEqualTo: true).snapshots(),
+      stream: firestore.collection('orders').where("shopId",isEqualTo: shopid).where("staOrder",isEqualTo: true).snapshots(),
       builder: (BuildContext context, AsyncSnapshot<QuerySnapshot> snapshot) {
-        print(snapshot.data.docs.length);
+
     return Scaffold(
       bottomNavigationBar: buttomlist(snapshot.data.docs.length),
       body: SafeArea(

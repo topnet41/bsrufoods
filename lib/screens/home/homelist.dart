@@ -1,5 +1,3 @@
-import 'dart:convert';
-
 import 'package:bsrufoods/screens/home/order.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -7,7 +5,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:rflutter_alert/rflutter_alert.dart';
 import 'package:http/http.dart' as http;
-import 'mydata.dart';
 
 class Homelist extends StatefulWidget {
   @override
@@ -18,93 +15,81 @@ class _HomelistState extends State<Homelist> {
   FirebaseAuth _firebaseAuth = FirebaseAuth.instance;
   FirebaseFirestore firestore = FirebaseFirestore.instance;
   DocumentSnapshot snapshot;
+  String shopid;
+  List orderAll = [];
+  Map<String, dynamic> myOrder = Map();
 
- 
-  dynamic url = "https://apibsrufood.000webhostapp.com/data.json";
   bool statusBtnSend;
   @override
-  void initState() { 
+  void initState() {
     super.initState();
-    loadData();
+    getUser();
     statusBtnSend = false;
   }
 
-  List<MyData> myAllData = [];
-  List send = [];
-  
-  void sendNotification()async{
-        await http.get("https://apibsrufood.000webhostapp.com/apiNotification.php?isAdd=true&token=esV46vSMS2uSXFdQ_H7kX3:APA91bFYLbR4jn1yp3N7ASJLa8a5g2J3ahGQ2lc3KfnwBPgwI-FHcaGCTVPM-5W2WgCF2mW65u3Zaf3Ab930kYZ-O43OpVdffgT8PzPlhgcB3DkwHN_W49z3GE0CmHGgJKcrKhLRH0Dq&title=ร้านยายหลา&body=อาหารได้แล้วครับ");
-        setState(() {
-                    statusBtnSend =false;
-        });
+  void sendNotification() async {
+    await http.get(
+        "https://apibsrufood.000webhostapp.com/apiNotification.php?isAdd=true&token=esV46vSMS2uSXFdQ_H7kX3:APA91bFYLbR4jn1yp3N7ASJLa8a5g2J3ahGQ2lc3KfnwBPgwI-FHcaGCTVPM-5W2WgCF2mW65u3Zaf3Ab930kYZ-O43OpVdffgT8PzPlhgcB3DkwHN_W49z3GE0CmHGgJKcrKhLRH0Dq&title=ร้านยายหลา&body=อาหารได้แล้วครับ");
+    setState(() {
+      statusBtnSend = false;
+    });
   }
 
-  void loadData()async{
-       var response = await http.get(url);
-       String stringjson = utf8.decode(response.bodyBytes);
-      if(response.statusCode == 200){
-        var data = json.decode(stringjson);
-        //print(stringjson);
+  void getUser() async {
+    await firestore
+        .collection("member")
+        .doc(_firebaseAuth.currentUser.uid)
+        .get()
+        .then((value) {
+      setState(() {
+        shopid = value["userId"];
+        getdata();
+      });
+    });
+  }
 
-        myAllData = (data as List<dynamic>).map((item) => MyData.fromMap(item)).toList();
-        
-        setState(() {
-          myAllData.forEach((orderdata) {
-              // print(orderdata.orderids);
-          });
-        });
-      }else{
-        print('no where');
+  void getdata() async {
+    await firestore
+        .collection("orders")
+        .where("shopId", isEqualTo: shopid)
+        .get()
+        .then((value) {
+      value.docs.forEach((element) {
+        getrefer(element.data(),element.id);
+      });
+    });
+  }
+
+  void getrefer(final refer,String orderid) async {
+    Map<String, dynamic> myOrder = Map();
+    snapshot = await refer["detail"].get();
+    myOrder["orderid"] = orderid;
+    myOrder["detail"] = snapshot["detail"].toList();
+    for (var detail in myOrder["detail"]) {
+      String options = "";
+      if (detail["option"] != null) {
+        for (var option in detail["option"]) {
+          options = "$options ${option["name"]}";
+        }
       }
-  }
-
-  Widget showText(MyData data, int index) {
-    return Padding(
-      padding: const EdgeInsets.only(left: 20,right: 12),
-      child: Row(mainAxisAlignment: MainAxisAlignment.start, 
-        children: [
-          Padding(
-            padding: const EdgeInsets.only(right: 25),
-            child: Text((data.orderid).toString()),
-          ),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.end,
-              children: data.detail.map((order) {
-                return Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Text(order.name),
-                    Checkbox(
-                      value: order.status,
-                      onChanged: (bool value) {
-                        setState(() {
-                          order.status = value;
-                          if(value){
-                          send.add(order.name);
-                          }else{
-                          send.remove(order.name);
-                          }
-                          print(send);
-                        });
-                      }),
-                  ],
-                );
-              }).toList(),
-            ),
-          ),
-          
-        // Expanded(child: Center(child: Text("asxx"))),
-        // 
-        ]),
-    );
+      detail["option"] = options;
+    }
+    myOrder["history"] = refer["history"];
+    myOrder["staComent"] = refer["staComent"];
+    myOrder["staOrder"] = refer["staOrder"];
+    myOrder["time"] = refer["time"];
+    setState(() {
+      orderAll.add(myOrder);
+    });
+    print(orderAll);
   }
 
   Widget buttonmenu() {
     return FloatingActionButton.extended(
       heroTag: null,
       onPressed: () {
-        MaterialPageRoute route = MaterialPageRoute(builder: (BuildContext context)=> Order());
+        MaterialPageRoute route =
+            MaterialPageRoute(builder: (BuildContext context) => Order());
         Navigator.push(context, route);
       },
       tooltip: 'increment',
@@ -123,23 +108,39 @@ class _HomelistState extends State<Homelist> {
     );
   }
 
-  Widget listfood() {
-    return Container(
-      // padding: EdgeInsets.only(left: 12.0),
-      child: ListView.separated(
-        separatorBuilder: (context, index) => Divider(
-          color: Color.fromRGBO(255, 51, 247, 1),
-        ),
-        itemCount: myAllData.length,
-        itemBuilder: (context, int index) => showText(myAllData[index], index),
-      ),
-    );
+  Widget showOrder() {
+    return ListView.separated(
+        itemBuilder: (context, index) {
+          return Container(
+            padding: EdgeInsets.all(15.0),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text(orderAll[index]["orderid"]),
+                Container(
+                    width: 200,
+                    child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: List.generate(
+                            orderAll[index]["detail"].length, (numa) {
+                          return orderAll[index]["detail"][numa]["option"] == ""
+                              ? Text(orderAll[index]["detail"][numa]["name"])
+                               : Text(orderAll[index]["detail"][numa]["name"] +
+                                  "\n (${orderAll[index]["detail"][numa]["option"]})");
+                        }))),
+                Text("sefse")
+              ],
+            ),
+          );
+        },
+        separatorBuilder: (context, index) => Divider(),
+        itemCount: orderAll.length);
   }
 
   @override
   Widget build(BuildContext context) {
     return DefaultTabController(
-      length: 4,
+      length: 3,
       child: Scaffold(
         appBar: AppBar(
           actionsIconTheme: IconThemeData(color: Colors.white, size: 28),
@@ -152,25 +153,30 @@ class _HomelistState extends State<Homelist> {
                 ),
                 onPressed: () {
                   Alert(
-                          context: context,
-                          title: "ต้องการเสิร์ฟทั้งหมด",
-                          buttons: [
-              DialogButton(
-                onPressed: statusBtnSend? (){} : (){
-                  setState(() {
-                    statusBtnSend =true;
-                  });
-                  sendNotification();
-                  Navigator.pop(context);
-                } ,
-                child: statusBtnSend ? CircularProgressIndicator() : Text(
-                  "เสิร์ฟ",
-                  style: TextStyle(color: Colors.white, fontSize: 20),
-                ),
-                color: Color.fromRGBO(255, 51, 247, 1),
-              ),
-                          ],)
-                      .show();
+                    context: context,
+                    title: "ต้องการเสิร์ฟทั้งหมด",
+                    buttons: [
+                      DialogButton(
+                        onPressed: statusBtnSend
+                            ? () {}
+                            : () {
+                                setState(() {
+                                  statusBtnSend = true;
+                                });
+                                sendNotification();
+                                Navigator.pop(context);
+                              },
+                        child: statusBtnSend
+                            ? CircularProgressIndicator()
+                            : Text(
+                                "เสิร์ฟ",
+                                style: TextStyle(
+                                    color: Colors.white, fontSize: 20),
+                              ),
+                        color: Color.fromRGBO(255, 51, 247, 1),
+                      ),
+                    ],
+                  ).show();
                 }),
             IconButton(
               icon: Icon(
@@ -195,10 +201,7 @@ class _HomelistState extends State<Homelist> {
                         text: "ทั้งหมด",
                       ),
                       Tab(
-                        text: "รับทันที",
-                      ),
-                      Tab(
-                        text: "สั่งล่วงหน้า",
+                        text: "มีเวลารับ",
                       ),
                       Tab(
                         text: "รายการที่ซ้ำกัน",
@@ -209,12 +212,12 @@ class _HomelistState extends State<Homelist> {
                     color: Color.fromRGBO(210, 210, 210, 1.0),
                     textStyle: TextStyle(fontSize: 16.0, color: Colors.black),
                     child: Padding(
-                      padding: const EdgeInsets.only(right:12.0,left: 12.0),
+                      padding: const EdgeInsets.only(right: 12.0, left: 12.0),
                       child: Row(
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
-                             Text("ลำดับคิว"),
-                             Text("รายการอาหาร"),
+                            Text("ลำดับคิว"),
+                            Text("รายการอาหาร"),
                             Text("จำนวน"),
                           ]),
                     ),
@@ -230,12 +233,9 @@ class _HomelistState extends State<Homelist> {
         ),
         body: TabBarView(
           children: [
-            myAllData.length == 0 
-            ? Center(child: CircularProgressIndicator(),)
-            : listfood(),
-            listfood(),
-            listfood(),
-            listfood(),
+            showOrder(),
+            Text("asd"),
+            Text("asd"),
           ],
         ),
         floatingActionButton: Row(

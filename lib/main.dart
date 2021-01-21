@@ -23,6 +23,7 @@ class Asp extends StatelessWidget {
         title: "BsruFood",
         theme: ThemeData(
           primaryColor: Color.fromRGBO(255, 51, 247, 1),
+           buttonTheme: ButtonThemeData(buttonColor: Color.fromRGBO(255, 51, 247, 1))
         ),
         // home: Login(),
         initialRoute: '/',

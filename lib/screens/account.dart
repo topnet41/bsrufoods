@@ -1,5 +1,6 @@
 import 'package:bsrufoods/screens/account/edituser.dart';
 import 'package:bsrufoods/screens/account/review.dart';
+import 'package:bsrufoods/screens/login.dart';
 import 'package:bsrufoods/screens/setting.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -23,6 +24,7 @@ class _AccountState extends State<Account> {
   final facebookLogin = FacebookLogin();
   bool statusButton;
   bool statusShop = true;
+  String userid;
 
   void getstatusShop() async {
     final documents = await firestore
@@ -31,6 +33,7 @@ class _AccountState extends State<Account> {
         .get();
     setState(() {
       statusShop = documents["statusShop"];
+      userid = documents["userId"];
     });
   }
 
@@ -47,6 +50,7 @@ class _AccountState extends State<Account> {
   @override
   void initState() {
     super.initState();
+    
     getstatusShop();
     statusButton = false;
   }
@@ -95,7 +99,8 @@ class _AccountState extends State<Account> {
         .update(map);
     await facebookLogin.logOut();
     await firebase.signOut();
-    Navigator.pushReplacementNamed(context, "/login");
+    MaterialPageRoute route = MaterialPageRoute(builder: (BuildContext context)=>Login());
+    Navigator.pushAndRemoveUntil(context, route, (Route<dynamic> route) => false);
   }
 
   @override
@@ -129,12 +134,12 @@ class _AccountState extends State<Account> {
                 onTap: () {
                   MaterialPageRoute route = MaterialPageRoute(
                       builder: (BuildContext context) => EditUser());
-                  Navigator.push(context, route);
+                  Navigator.push(context, route).then((value) {setState(() {});});
                 },
               ),
               Divider(),
               ListTile(
-                leading: Icon(Icons.store, size: 40),
+                leading: statusShop ? Icon(Icons.store, size: 40,color: Colors.green,) : Icon(Icons.store, size: 40),
                 title: Text("สถานะของร้าน"),
                 trailing: statusShop ? Text("เปิด") : Text("ปิด"),
                 onTap: ()=>changeStatusShop(statusShop),
@@ -151,7 +156,7 @@ class _AccountState extends State<Account> {
                 title: Text("รีวิว"),
                 onTap: () {
                   MaterialPageRoute route = MaterialPageRoute(
-                      builder: (BuildContext context) => Review());
+                      builder: (BuildContext context) => Review(userid));
                   Navigator.of(context).push(route);
                 },
               ),

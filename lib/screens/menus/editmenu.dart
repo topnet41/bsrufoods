@@ -79,6 +79,55 @@ class _EditmenuState extends State<Editmenu> {
         ]).show();
   }
 
+  void editOption(int index,String name,String price) {
+    optionName.text = name;
+    optionPrice.text = price;
+    Alert(
+        context: context,
+        title: "แก้ไขตัวเลือก",
+        content: Column(
+          children: [
+            TextField(
+              controller: optionName,
+              decoration: InputDecoration(
+                labelText: 'ตัวเลือก',
+              ),
+            ),
+            TextField(
+              controller: optionPrice,
+              decoration: InputDecoration(
+                labelText: 'ราคา',
+              ),
+              keyboardType: TextInputType.number,
+            )
+          ],
+        ),
+        buttons: [
+          DialogButton(
+            onPressed: () {
+              if (optionName.text == "" || optionPrice.text == "") {
+                print("ไม่ม่ค่านะเว้ยย");
+              } else {
+                num priceMenu = int.parse(optionPrice.text);
+                Map<String, dynamic> optionMap = Map();
+                optionMap["name"] = optionName.text;
+                optionMap["price"] = priceMenu;
+                option[index]= optionMap;
+                optionName.clear();
+                optionPrice.clear();
+                setState(() {});
+                Navigator.pop(context);
+              }
+            },
+            child: Text(
+              "ตกลง",
+              style: TextStyle(color: Colors.white, fontSize: 20),
+            ),
+          ),
+        ]).show();
+  }
+
+
   void addOption() {
     Alert(
         context: context,
@@ -156,7 +205,7 @@ class _EditmenuState extends State<Editmenu> {
                     IconButton(
                         icon: Icon(Icons.edit),
                         onPressed: () {
-                          print(index);
+                          editOption(index,option[index]["name"],"${option[index]["price"]}");
                         }),
                     IconButton(
                         icon: Icon(Icons.delete, color: Colors.red),
