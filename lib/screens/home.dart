@@ -1,9 +1,11 @@
 import 'package:badges/badges.dart';
 import 'package:bsrufoods/screens/account.dart';
+import 'package:bsrufoods/screens/notifi.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
-
+import 'package:firebase_messaging/firebase_messaging.dart';
+import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'home/homelist.dart';
 import 'menu.dart';
 
@@ -13,8 +15,12 @@ class Home extends StatefulWidget {
   _HomeState createState() => _HomeState();
 }
 class _HomeState extends State<Home> {
+  FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin =
+    FlutterLocalNotificationsPlugin();
   FirebaseAuth auth = FirebaseAuth.instance;
   FirebaseFirestore firestore = FirebaseFirestore.instance;
+  FirebaseMessaging firebaseMessaging = FirebaseMessaging();
+  String messaged;
   var items;
   String shopid;
   CollectionReference order ;
@@ -27,14 +33,32 @@ class _HomeState extends State<Home> {
       });
     }
 
+    sendNotification(String title,String body) async {
+    var androidPlatformChannelSpecifics = AndroidNotificationDetails('10000',
+        'FLUTTER_NOTIFICATION_CHANNEL', 'FLUTTER_NOTIFICATION_CHANNEL_DETAIL',
+        importance: Importance.max, priority: Priority.high);
+    var iOSPlatformChannelSpecifics = IOSNotificationDetails();
+ 
+    var platformChannelSpecifics = NotificationDetails(android:androidPlatformChannelSpecifics,iOS: iOSPlatformChannelSpecifics );
+ 
+    await flutterLocalNotificationsPlugin.show(111, title,
+        body, platformChannelSpecifics,
+        payload: 'I just haven\'t Met You Yet');
+  }
+
     @override
     void initState() { 
+      
       super.initState();
+      message();
       getUser();
     }
 
 
-List<Widget> shows = [Homelist(),Menu(),null,Account()];
+Widget shows(int i){
+  print(i);
+  return i == 0 ? Homelist() : i == 1 ? Menu() : i == 2 ? Notifi(shopid) : Account();
+}
 int _currentIndex = 0;
   Widget showlogo() {
     return Container(
@@ -76,15 +100,12 @@ int _currentIndex = 0;
             badgeContent: noti == 0 ? Text("0",style: TextStyle(color: Colors.white)) 
             : Text(noti.toString(),style: TextStyle(color: Colors.white),),
             toAnimate: true,
-            position: BadgePosition(top: -1,start: 33),
-            child: IconButton(
-                icon: Icon(
+            position: BadgePosition(top: -3,start: 30),
+            child: Icon(
                   Icons.notifications,
                   size:35.0
-                ),
-                onPressed: (){},
-            )
-          ),title:Text("การแจ้งเตือน")),
+                ),   
+            ),title:Text("การแจ้งเตือน")),
           BottomNavigationBarItem(
             icon: new Icon(
               Icons.person,
@@ -95,17 +116,37 @@ int _currentIndex = 0;
         ]);
   }
 
+  void message(){
+    firebaseMessaging.configure(
+        onMessage: (msg) async{
+            print("onMessage: $msg");
+            Map mapNotification = msg["notification"];
+            String title = mapNotification["title"];
+             String body = mapNotification["body"];
+            return sendNotification(title,body);
+        },
+      onLaunch: (msg) async {
+        print("onLaunch: $msg");
+        return;
+      },
+      onResume: (msg) async {
+        print("onResume: $msg");
+        return;
+      },
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return StreamBuilder<QuerySnapshot>(
-      stream: firestore.collection('orders').where("shopId",isEqualTo: shopid).where("staOrder",isEqualTo: true).snapshots(),
+      stream: firestore.collection('orders').where("shopId",isEqualTo: shopid).where("staOrder",isEqualTo: false).snapshots(),
       builder: (BuildContext context, AsyncSnapshot<QuerySnapshot> snapshot) {
 
     return Scaffold(
       bottomNavigationBar: buttomlist(snapshot.data.docs.length),
       body: SafeArea(
         child: Center(
-          child: shows[_currentIndex],
+          child: shows(_currentIndex),
         ),
       ),
     );

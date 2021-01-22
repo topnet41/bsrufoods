@@ -4,9 +4,12 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
-
+import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'screens/account/register_fb.dart';
 import 'screens/home.dart';
+
+FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin =
+    FlutterLocalNotificationsPlugin();
 
 void main(List<String> args) async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -48,6 +51,23 @@ class _SplashScreenState extends State<SplashScreen> {
 
   @override
   void initState() {
+    const AndroidInitializationSettings initializationSettingsAndroid =
+    AndroidInitializationSettings('app_icon');
+final IOSInitializationSettings initializationSettingsIOS =
+    IOSInitializationSettings(
+        onDidReceiveLocalNotification: (id, title, body, payload) {
+      print("onDidReceiveLocalNotification called.");
+    }); 
+final InitializationSettings initializationSettings = InitializationSettings(
+    android: initializationSettingsAndroid,
+    iOS: initializationSettingsIOS);
+flutterLocalNotificationsPlugin.initialize(initializationSettings,
+    onSelectNotification: (payload) {
+      // when user tap on notification.
+      print("onSelectNotification called.");
+      
+    });
+
     super.initState();
        var user = firebase.currentUser;
        print("user == $user");
@@ -67,6 +87,8 @@ class _SplashScreenState extends State<SplashScreen> {
       // });
     });
   }
+
+  
 
   @override
   Widget build(BuildContext context) {
