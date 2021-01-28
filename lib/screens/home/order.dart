@@ -1,3 +1,4 @@
+import 'package:bsrufoods/screens/order/oederGetQr.dart';
 import 'package:flutter/material.dart';
 import 'package:qr_code_scanner/qr_code_scanner.dart';
 
@@ -9,6 +10,7 @@ class Order extends StatefulWidget {
 class _OrderState extends State<Order> {
    final GlobalKey qrKey = GlobalKey(debugLabel: 'QR');
   var qrText = "";
+  List ss = [];
   QRViewController controller;
 
   @override
@@ -50,8 +52,20 @@ class _OrderState extends State<Order> {
     controller.scannedDataStream.listen((scanData) {
       setState(() {
         qrText = scanData;
+        ss.add(scanData);
+        getqrCode();
       });
     });
+  }
+
+  void getqrCode(){
+    if(ss.length == 1){
+        MaterialPageRoute route = MaterialPageRoute(builder: (BuildContext context)=>OrderGetQr(qrText));
+        Navigator.push(context, route).then((value) {setState(() {
+          ss = [];
+          qrText = "";
+        });});
+        }
   }
 
   @override

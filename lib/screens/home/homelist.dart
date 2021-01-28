@@ -1,4 +1,7 @@
+import 'dart:convert';
+
 import 'package:bsrufoods/screens/home/order.dart';
+import 'package:bsrufoods/screens/order/send_order.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
@@ -16,23 +19,34 @@ class _HomelistState extends State<Homelist> {
   FirebaseFirestore firestore = FirebaseFirestore.instance;
   DocumentSnapshot snapshot;
   String shopid;
+  String username;
   List orderAll = [];
-  Map<String, dynamic> myOrder = Map();
-
+  List orderSend = [];
+  SendOrder sendOrder;
   bool statusBtnSend;
   @override
   void initState() {
     super.initState();
     getUser();
+    sendOrder = SendOrder(context);
     statusBtnSend = false;
   }
 
   void sendNotification() async {
-    await http.get(
-        "https://apibsrufood.000webhostapp.com/apiNotification.php?isAdd=true&token=esV46vSMS2uSXFdQ_H7kX3:APA91bFYLbR4jn1yp3N7ASJLa8a5g2J3ahGQ2lc3KfnwBPgwI-FHcaGCTVPM-5W2WgCF2mW65u3Zaf3Ab930kYZ-O43OpVdffgT8PzPlhgcB3DkwHN_W49z3GE0CmHGgJKcrKhLRH0Dq&title=ร้านยายหลา&body=อาหารได้แล้วครับ");
+    sendOrder.sendOrder(orderSend,username);
     setState(() {
       statusBtnSend = false;
     });
+  }
+
+  void claer() async {
+    sendOrder.claerOrder(orderSend,username);
+    setState(() {
+       orderAll = [];
+       orderSend = [];
+      statusBtnSend = false;
+    });
+      await getdata();
   }
 
   void getUser() async {
@@ -43,38 +57,36 @@ class _HomelistState extends State<Homelist> {
         .then((value) {
       setState(() {
         shopid = value["userId"];
+        username = value["username"];
         getdata();
       });
     });
   }
 
-  void getdata() async {
+  Future getdata() async {
     await firestore
         .collection("orders")
         .where("shopId", isEqualTo: shopid)
+        .where("staOrder", isEqualTo: true)
+        .where("history", isEqualTo: false)
         .get()
         .then((value) {
       value.docs.forEach((element) {
-        getrefer(element.data(),element.id);
+        getrefer(element.data(), element.id);
       });
     });
   }
 
-  void getrefer(final refer,String orderid) async {
+  void getrefer(final refer, String orderid) async {
     Map<String, dynamic> myOrder = Map();
     snapshot = await refer["detail"].get();
-    myOrder["orderid"] = orderid;
+    myOrder["orderId"] = refer["orderId"];
+    myOrder["userId"] = refer["userId"];
+    myOrder["orderPath"] = orderid;
     myOrder["detail"] = snapshot["detail"].toList();
-    for (var detail in myOrder["detail"]) {
-      String options = "";
-      if (detail["option"] != null) {
-        for (var option in detail["option"]) {
-          options = "$options ${option["name"]}";
-        }
-      }
-      detail["option"] = options;
-    }
+    myOrder["detailSta"] = snapshot["detail"].toList();
     myOrder["history"] = refer["history"];
+    myOrder["time"] = refer["time"];
     myOrder["staComent"] = refer["staComent"];
     myOrder["staOrder"] = refer["staOrder"];
     myOrder["time"] = refer["time"];
@@ -87,7 +99,7 @@ class _HomelistState extends State<Homelist> {
   Widget buttonmenu() {
     return FloatingActionButton.extended(
       heroTag: null,
-      onPressed: () {
+      onPressed:  () {
         MaterialPageRoute route =
             MaterialPageRoute(builder: (BuildContext context) => Order());
         Navigator.push(context, route);
@@ -108,6 +120,63 @@ class _HomelistState extends State<Homelist> {
     );
   }
 
+  Widget showOrderTime() {
+    return ListView.separated(
+        itemBuilder: (context, index) {
+          return orderAll[index]["time"] == null ? Container(): Container(
+            padding: EdgeInsets.all(15.0),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Column(
+                  children: [
+                    Text(orderAll[index]["orderId"],style: TextStyle(fontSize: 18.0),),
+                   orderAll[index]["time"] == null ? Text("") :Text("เวลารับ ${orderAll[index]["time"].toString()}"),
+                  ],
+                ),
+                Container(
+                    width: 200,
+                    child: Column(
+                        children: List.generate(
+                            orderAll[index]["detail"].length, (numa) {
+                      return orderAll[index]["detailSta"][numa]["status"] ? Container() : Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Text(orderAll[index]["detail"][numa]["name"],style: TextStyle(fontSize: 18.0),),
+                          Row(
+                            children: [
+                          Text("X${orderAll[index]["detail"][numa]["count"]}",style: TextStyle(fontSize: 18.0),),
+                              Checkbox(
+                    value: orderAll[index]["detail"][numa]["status"],
+                    onChanged: (bool value) {
+                      setState(() {
+                        orderAll[index]["detail"][numa]["status"] = value;
+                        if(value){
+                          var check = orderSend.indexWhere((element) => element["userId"] == orderAll[index]["userId"]);
+                          orderSend.add(orderAll[index]);
+                          
+                        }else{
+                          orderSend.remove(orderAll[index]);
+                        }
+                        
+                        print(jsonEncode(orderSend));
+                      });
+                    },
+                  ),
+                            ],
+                          )
+                        ],
+                      );
+                    }))),
+                
+              ],
+            ),
+          );
+        },
+        separatorBuilder: (context, index) => orderAll[index]["time"] == null ? Container() : Divider(),
+        itemCount: orderAll.length);
+  }
+
   Widget showOrder() {
     return ListView.separated(
         itemBuilder: (context, index) {
@@ -116,19 +185,47 @@ class _HomelistState extends State<Homelist> {
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Text(orderAll[index]["orderid"]),
+                Column(
+                  children: [
+                    Text(orderAll[index]["orderId"],style: TextStyle(fontSize: 18.0),),
+                   orderAll[index]["time"] == null ? Text("") :Text("เวลารับ ${orderAll[index]["time"].toString()}"),
+                  ],
+                ),
                 Container(
                     width: 200,
                     child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
                         children: List.generate(
                             orderAll[index]["detail"].length, (numa) {
-                          return orderAll[index]["detail"][numa]["option"] == ""
-                              ? Text(orderAll[index]["detail"][numa]["name"])
-                               : Text(orderAll[index]["detail"][numa]["name"] +
-                                  "\n (${orderAll[index]["detail"][numa]["option"]})");
-                        }))),
-                Text("sefse")
+                      return orderAll[index]["detailSta"][numa]["status"] ? Container() : Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Text(orderAll[index]["detail"][numa]["name"],style: TextStyle(fontSize: 18.0),),
+                          Row(
+                            children: [
+                          Text("X${orderAll[index]["detail"][numa]["count"]}",style: TextStyle(fontSize: 18.0),),
+                              Checkbox(
+                    value: orderAll[index]["detail"][numa]["status"],
+                    onChanged: (bool value) {
+                      setState(() {
+                        orderAll[index]["detail"][numa]["status"] = value;
+                        if(value){
+                          var check = orderSend.indexWhere((element) => element["userId"] == orderAll[index]["userId"]);
+                          orderSend.add(orderAll[index]);
+                          
+                        }else{
+                          orderSend.remove(orderAll[index]);
+                        }
+                        
+                        print(jsonEncode(orderSend));
+                      });
+                    },
+                  ),
+                            ],
+                          )
+                        ],
+                      );
+                    }))),
+                
               ],
             ),
           );
@@ -151,10 +248,10 @@ class _HomelistState extends State<Homelist> {
                 icon: Icon(
                   Icons.send,
                 ),
-                onPressed: () {
+                onPressed: orderSend.length == 0 ? null : () {
                   Alert(
                     context: context,
-                    title: "ต้องการเสิร์ฟทั้งหมด",
+                    title: "ต้องการส่ง",
                     buttons: [
                       DialogButton(
                         onPressed: statusBtnSend
@@ -169,7 +266,7 @@ class _HomelistState extends State<Homelist> {
                         child: statusBtnSend
                             ? CircularProgressIndicator()
                             : Text(
-                                "เสิร์ฟ",
+                                "ส่ง",
                                 style: TextStyle(
                                     color: Colors.white, fontSize: 20),
                               ),
@@ -182,7 +279,33 @@ class _HomelistState extends State<Homelist> {
               icon: Icon(
                 Icons.cancel,
               ),
-              onPressed: () {},
+              onPressed: orderSend.length == 0 ? null : () {
+                Alert(
+                    context: context,
+                    title: "ต้องการเคลียรายการ",
+                    buttons: [
+                      DialogButton(
+                        onPressed: statusBtnSend
+                            ? () {}
+                            : () {
+                                setState(() {
+                                  statusBtnSend = true;
+                                });
+                                claer();
+                                Navigator.pop(context);
+                              },
+                        child: statusBtnSend
+                            ? CircularProgressIndicator()
+                            : Text(
+                                "เคลีย",
+                                style: TextStyle(
+                                    color: Colors.white, fontSize: 20),
+                              ),
+                        color: Color.fromRGBO(255, 51, 247, 1),
+                      ),
+                    ],
+                  ).show();
+              },
             ),
           ],
           bottom: PreferredSize(
@@ -234,7 +357,7 @@ class _HomelistState extends State<Homelist> {
         body: TabBarView(
           children: [
             showOrder(),
-            Text("asd"),
+            showOrderTime(),
             Text("asd"),
           ],
         ),

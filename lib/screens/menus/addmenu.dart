@@ -324,21 +324,21 @@ class _AddMenuState extends State<AddMenu> {
                           hinttext: "ราคาอาหาร",
                           maxLength: 10,
                           keyboardType: TextInputType.numberWithOptions()),
-                      Text("ข้อมูลตัวเลือก"),
-                      Divider(),
-                      orderOption(),
-                      SizedBox(
-                          width: double.infinity,
-                          child: RaisedButton(
-                            child: Row(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                Icon(Icons.add),
-                                Text("เพิ่มตัวเลือก"),
-                              ],
-                            ),
-                            onPressed: () => addOption(),
-                          )),
+                      // Text("ข้อมูลตัวเลือก"),
+                      // Divider(),
+                      // orderOption(),
+                      // SizedBox(
+                      //     width: double.infinity,
+                      //     child: RaisedButton(
+                      //       child: Row(
+                      //         mainAxisSize: MainAxisSize.min,
+                      //         children: [
+                      //           Icon(Icons.add),
+                      //           Text("เพิ่มตัวเลือก"),
+                      //         ],
+                      //       ),
+                      //       onPressed: () => addOption(),
+                      //     )),
                       SizedBox(
                           width: double.infinity,
                           child: RaisedButton(

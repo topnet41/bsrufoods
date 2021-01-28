@@ -355,21 +355,21 @@ class _EditmenuState extends State<Editmenu> {
                           ),widget.menuDetail[widget.index]["status"]? Text("เปิด") : Text("ปิด")
                         ],
                       ),
-                      Text("ข้อมูลตัวเลือก"),
-                      Divider(),
-                      orderOption(),
-                      SizedBox(
-                          width: double.infinity,
-                          child: RaisedButton(
-                            child: Row(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                Icon(Icons.add),
-                                Text("เพิ่มตัวเลือก"),
-                              ],
-                            ),
-                            onPressed: () => addOption(),
-                          )),
+                      // Text("ข้อมูลตัวเลือก"),
+                      // Divider(),
+                      // orderOption(),
+                      // SizedBox(
+                      //     width: double.infinity,
+                      //     child: RaisedButton(
+                      //       child: Row(
+                      //         mainAxisSize: MainAxisSize.min,
+                      //         children: [
+                      //           Icon(Icons.add),
+                      //           Text("เพิ่มตัวเลือก"),
+                      //         ],
+                      //       ),
+                      //       onPressed: () => addOption(),
+                      //     )),
                       SizedBox(
                           width: double.infinity,
                           child: RaisedButton(

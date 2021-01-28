@@ -180,7 +180,6 @@ class _RegisterState extends State<Register> {
       int member;
         final documents = await firestore.collection("member").get();
         member = documents.docChanges.length+1;
-        print(member);
         memberid = member.toString();
     await _firebaseMessaging.getToken().then((String token) {
       tokenUser = [token];
