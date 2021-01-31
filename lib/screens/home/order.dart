@@ -3,6 +3,8 @@ import 'package:flutter/material.dart';
 import 'package:qr_code_scanner/qr_code_scanner.dart';
 
 class Order extends StatefulWidget {
+  final String shopid ;
+  Order(this.shopid);
   @override
   _OrderState createState() => _OrderState();
 }
@@ -60,7 +62,7 @@ class _OrderState extends State<Order> {
 
   void getqrCode(){
     if(ss.length == 1){
-        MaterialPageRoute route = MaterialPageRoute(builder: (BuildContext context)=>OrderGetQr(qrText));
+        MaterialPageRoute route = MaterialPageRoute(builder: (BuildContext context)=>OrderGetQr(qrText,widget.shopid));
         Navigator.push(context, route).then((value) {setState(() {
           ss = [];
           qrText = "";

@@ -26,37 +26,26 @@ class SendOrder {
 
   void sendOrder(List order,String username) async {
     order.map((e) {
-      getSenduser(e["userId"],"อาหารได้แล้วบางส่วน",username);
+      String mes = e["nameSend"].join(',');
+      getSenduser(e["userId"],"$mes ได้แล้ว",username);
     }).toList();
   }
 
-  Future setdata(var e)async{
-          await firestore.collection("orderDetail").doc(e["orderPath"]).update({"detail":FieldValue.arrayRemove(e["detail"])});
-          await update(e);
-          print("mkaflmkewfmegtmioersyngsdknguierfdlngrhkdfglnfhgkj");
-  }
 
-  Future update(var e)async{
-          await firestore.collection("orderDetail").doc(e["orderPath"]).update({"detail":FieldValue.arrayUnion(e["detail"])});
-  }
-
-  void claerOrder(List order,String username){
-    order.map((e) {
+  Future claerOrder(List order,String username)async{
+   var orderclaer = order.map((e) {
        var checkOrder = e["detail"].indexWhere((element) => element["status"] == false);
       if(checkOrder == -1){
           firestore.collection("orders").doc(e["orderPath"]).update({"history":true});
-         firestore.collection("orderDetail").doc(e["orderPath"]).update({"detail":FieldValue.arrayRemove(e["detailSta"])}).then((value){
-                firestore.collection("orderDetail").doc(e["orderPath"]).update({"detail":FieldValue.arrayUnion(e["detail"])});
-           });
+           firestore.collection("orderDetail").doc(e["orderPath"]).set({"detail":FieldValue.arrayUnion(e["detail"])}).then((value){});
           getSenduser(e["userId"],"อาหารได้ครบแล้ว",username);
       }else{
-           firestore.collection("orderDetail").doc(e["orderPath"]).update({"detail":FieldValue.arrayRemove(e["detailSta"])}).then((value){
-                firestore.collection("orderDetail").doc(e["orderPath"]).update({"detail":FieldValue.arrayUnion(e["detail"])});
-           });
+           firestore.collection("orderDetail").doc(e["orderPath"]).set({"detail":FieldValue.arrayUnion(e["detail"])}).then((value){});
           // print(e["orderPath"]);
           // print("ee == ${jsonEncode(e)}");
       }
   }).toList();
+  return orderclaer;
 }
-
+  
 }

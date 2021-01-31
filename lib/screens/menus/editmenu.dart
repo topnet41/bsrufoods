@@ -274,6 +274,7 @@ class _EditmenuState extends State<Editmenu> {
     if (keyfrom.currentState.validate()) {
       keyfrom.currentState.save();
       num priceMenu = int.parse(price.text);
+      widget.menuDetail[widget.index]["name"] = name.text;
       widget.menuDetail[widget.index]["price"] = priceMenu;
       widget.menuDetail[widget.index]["option"] = option;
       print(widget.menuDetail);

@@ -17,6 +17,7 @@ class _NotifiState extends State<Notifi> {
   void getnoti() async {
     await firestore
         .collection("orders")
+        .orderBy("orderList",descending: true)
         .where("shopId", isEqualTo: widget.shopid)
         .get()
         .then((value) {
@@ -38,13 +39,14 @@ class _NotifiState extends State<Notifi> {
       };
     order["cash"] = data["cash"];
     order["time"] = data["time"];
+    order["image"] = data["image"];
     order["profile"] = data["profile"];
     order["userId"] = data["userId"];
     order["orderList"] = data["orderList"];
     order["detail"] = orderDetail["detail"];
+    order["orderpath"] = id;
     setState(() {
       noti.add(order);
-      orderpath = id;
     });
     print(order);
   }
@@ -55,6 +57,13 @@ class _NotifiState extends State<Notifi> {
     getnoti();
   }
 
+  Future refres()async{
+      setState(() {
+        noti =[];
+      });
+      getnoti();
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -62,38 +71,41 @@ class _NotifiState extends State<Notifi> {
         title: Text("การแจ้งเตือน"),
         centerTitle: true,
       ),
-      body: ListView.builder(
-        itemBuilder: (context, index) {
-          return ListTile(
-            leading: Container(
-              decoration: BoxDecoration(
-                color: Colors.pink,
-                borderRadius: BorderRadius.all(
-                Radius.circular(30.0)
-              )),
-              width: 50,height: 50
-              ,child: Center(child: Icon(Icons.store,color: Colors.white,)),
-              ),
-            title: Text("Order-${noti[index]["orderId"]}"),
-            trailing: noti[index]["status"]["staOrder"]
-                ? Text(
-                    "รับแล้ว",
-                    style: TextStyle(color: Colors.green),
-                  )
-                : Text("รอการยืนยัน", style: TextStyle(color: Colors.red)),
-            tileColor: noti[index]["status"]["staOrder"] ? Colors.white : Color.fromRGBO(255, 0, 0, 0.3),            
-            subtitle: Text("วันที่ ${noti[index]["orderDate"]}"),
-            onTap: (){
-              MaterialPageRoute route = MaterialPageRoute(builder: (BuildContext context)=>NotiMenu(noti[index]["userid"],orderpath, noti[index]));
-              Navigator.push(context, route).then((value){setState(() {
-                noti = [];
-                getnoti();
-              });});
-            },
-          );
-        },
-        
-        itemCount: noti.length,
+      body: RefreshIndicator(
+            onRefresh: refres,
+        child: ListView.builder(
+          itemBuilder: (context, index) {
+            return ListTile(
+              leading: Container(
+                decoration: BoxDecoration(
+                  color: Colors.pink,
+                  borderRadius: BorderRadius.all(
+                  Radius.circular(30.0)
+                )),
+                width: 50,height: 50
+                ,child: Center(child: Icon(Icons.store,color: Colors.white,)),
+                ),
+              title: Text("Order-${noti[index]["orderId"]}"),
+              trailing: noti[index]["status"]["staOrder"]
+                  ? Text(
+                      "รับแล้ว",
+                      style: TextStyle(color: Colors.green),
+                    )
+                  : Text("รอการยืนยัน", style: TextStyle(color: Colors.red)),
+              tileColor: noti[index]["status"]["staOrder"] ? Colors.white : Color.fromRGBO(255, 0, 0, 0.3),            
+              subtitle: Text("วันที่ ${noti[index]["orderDate"]}"),
+              onTap: (){
+                MaterialPageRoute route = MaterialPageRoute(builder: (BuildContext context)=>NotiMenu(noti[index]["userid"],noti[index]["orderpath"], noti[index]));
+                Navigator.push(context, route).then((value){setState(() {
+                  noti = [];
+                  getnoti();
+                });});
+              },
+            );
+          },
+          
+          itemCount: noti.length,
+        ),
       ),
     );
   }

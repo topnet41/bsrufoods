@@ -18,11 +18,11 @@ class RegisterFb extends StatefulWidget {
 }
 
 class _RegisterFbState extends State<RegisterFb> {
-    final keyfrom = GlobalKey<FormState>();
-  
+  final keyfrom = GlobalKey<FormState>();
+
   final phoneNumber = TextEditingController();
   final reCeipt = TextEditingController();
-  String bank ;
+  String bank;
   var now = DateTime.now();
   String getDatetime;
   final List<Map<String, dynamic>> _items = [
@@ -50,9 +50,8 @@ class _RegisterFbState extends State<RegisterFb> {
   FirebaseAuth firebaseAuth = FirebaseAuth.instance;
   FirebaseMessaging _firebaseMessaging = FirebaseMessaging();
   FirebaseFirestore firestore = FirebaseFirestore.instance;
-  DocumentSnapshot snapshot ;
+  DocumentSnapshot snapshot;
   String memberid;
-
 
   final picker = ImagePicker();
   bool statusBool;
@@ -62,7 +61,7 @@ class _RegisterFbState extends State<RegisterFb> {
   String urlPhoto, urlPhoto1;
 
   @override
-  void initState() { 
+  void initState() {
     super.initState();
     statusBool = false;
     print(memberid);
@@ -94,7 +93,7 @@ class _RegisterFbState extends State<RegisterFb> {
     } else {
       if (keyfrom.currentState.validate()) {
         keyfrom.currentState.save();
-          uploadPictureToStore();
+        uploadPictureToStore();
       }
     }
   }
@@ -122,25 +121,24 @@ class _RegisterFbState extends State<RegisterFb> {
         .ref()
         .child('Barcode/member$i.jpg')
         .getDownloadURL();
-    
+
     await setupData();
   }
-
-  
 
   Future<void> setupData() async {
     FirebaseAuth firebaseAuth = FirebaseAuth.instance;
     FirebaseFirestore firestore = FirebaseFirestore.instance;
-    DocumentReference ref = firestore.collection('menus').doc(firebaseAuth.currentUser.uid);
+    DocumentReference ref =
+        firestore.collection('menus').doc(firebaseAuth.currentUser.uid);
     List<String> tokenUser;
     int member;
-        final documents = await firestore.collection("member").get();
-        member = documents.docChanges.length+1;
-        print(member);
-        memberid = member.toString();
+    final documents = await firestore.collection("member").get();
+    member = documents.docChanges.length + 1;
+    print(member);
+    memberid = member.toString();
     await _firebaseMessaging.getToken().then((String token) {
       tokenUser = [token];
-     });
+    });
     num count = 5;
     Map<String, dynamic> map = Map();
     map['username'] = firebaseAuth.currentUser.displayName;
@@ -155,6 +153,8 @@ class _RegisterFbState extends State<RegisterFb> {
     map['tokenUser'] = FieldValue.arrayUnion(tokenUser);
     map['userStatus'] = "admin";
     map['menus'] = ref;
+    map['timeon'] = "09:00";
+    map['timeoff'] = "16:00";
     map['profile'] = urlPhoto;
 
     var user = firebaseAuth.currentUser;
@@ -205,7 +205,6 @@ class _RegisterFbState extends State<RegisterFb> {
     });
   }
 
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -234,8 +233,12 @@ class _RegisterFbState extends State<RegisterFb> {
                         icon: Icon(Icons.account_balance),
                         labelText: "ธนาคาร",
                         items: _items,
-                        onChanged: (val){bank = val ;},
-                        onSaved: (val){bank = val ;},
+                        onChanged: (val) {
+                          bank = val;
+                        },
+                        onSaved: (val) {
+                          bank = val;
+                        },
                       ),
                       Divider(),
                       getBarcode(),
@@ -264,10 +267,12 @@ class _RegisterFbState extends State<RegisterFb> {
                                 mainAxisSize: MainAxisSize.min,
                                 children: [
                                   Icon(Icons.save_alt),
-                                  statusBool ? CircularProgressIndicator() : Text("บันทึกข้อมูล"),
+                                  statusBool
+                                      ? CircularProgressIndicator()
+                                      : Text("บันทึกข้อมูล"),
                                 ],
                               ),
-                              onPressed: statusBool ? (){} : () => _onSave())),
+                              onPressed: statusBool ? () {} : () => _onSave())),
                     ],
                   ),
                 )),

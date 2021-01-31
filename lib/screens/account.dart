@@ -23,7 +23,7 @@ class _AccountState extends State<Account> {
 
   final facebookLogin = FacebookLogin();
   bool statusButton;
-  bool statusShop = true;
+  bool statusShop;
   String userid;
 
   void getstatusShop() async {
@@ -39,7 +39,7 @@ class _AccountState extends State<Account> {
 
   void changeStatusShop(bool status) async {
     Map<String, dynamic> map = Map();
-    status ? map["statusShop"] = false : map["statusShop"] = true;
+    !status ? map["statusShop"] = false : map["statusShop"] = true;
     await firestore
         .collection("member")
         .doc(firebase.currentUser.uid)
@@ -50,7 +50,7 @@ class _AccountState extends State<Account> {
   @override
   void initState() {
     super.initState();
-    
+    statusShop = true;
     getstatusShop();
     statusButton = false;
   }
@@ -85,6 +85,7 @@ class _AccountState extends State<Account> {
     ]).show();
   }
 
+
   Future<void> logout() async {
     List<String> tokenUser;
     await _firebaseMessaging.getToken().then((String token) {
@@ -99,8 +100,10 @@ class _AccountState extends State<Account> {
         .update(map);
     await facebookLogin.logOut();
     await firebase.signOut();
-    MaterialPageRoute route = MaterialPageRoute(builder: (BuildContext context)=>Login());
-    Navigator.pushAndRemoveUntil(context, route, (Route<dynamic> route) => false);
+    MaterialPageRoute route =
+        MaterialPageRoute(builder: (BuildContext context) => Login());
+    Navigator.pushAndRemoveUntil(
+        context, route, (Route<dynamic> route) => false);
   }
 
   @override
@@ -134,15 +137,38 @@ class _AccountState extends State<Account> {
                 onTap: () {
                   MaterialPageRoute route = MaterialPageRoute(
                       builder: (BuildContext context) => EditUser());
-                  Navigator.push(context, route).then((value) {setState(() {});});
+                  Navigator.push(context, route).then((value) {
+                    setState(() {});
+                  });
                 },
               ),
               Divider(),
               ListTile(
-                leading: statusShop ? Icon(Icons.store, size: 40,color: Colors.green,) : Icon(Icons.store, size: 40),
+                leading: statusShop
+                    ? Icon(
+                        Icons.store,
+                        size: 40,
+                        color: Colors.green,
+                      )
+                    : Icon(Icons.store, size: 40),
                 title: Text("สถานะของร้าน"),
-                trailing: statusShop ? Text("เปิด") : Text("ปิด"),
-                onTap: ()=>changeStatusShop(statusShop),
+                trailing: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Switch(
+                      value: statusShop,
+                      onChanged: (dddd) {
+                        setState(() {
+                          statusShop = dddd;
+                        });
+                        changeStatusShop(statusShop);
+                      },
+                      activeColor: Colors.green,
+                    ),
+                    statusShop ? Text("เปิด") : Text("ปิด"),
+                  ],
+                ),
+                // onTap: ()=>alertStatusSop(),
               ),
               Divider(),
               ListTile(
@@ -165,7 +191,8 @@ class _AccountState extends State<Account> {
                 leading: Icon(Icons.settings, size: 40),
                 title: Text("ตั้งค่า"),
                 onTap: () {
-                  MaterialPageRoute route = MaterialPageRoute (builder: (BuildContext context) => Setting());
+                  MaterialPageRoute route = MaterialPageRoute(
+                      builder: (BuildContext context) => Setting());
                   Navigator.push(context, route);
                 },
               ),

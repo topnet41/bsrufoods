@@ -1,5 +1,6 @@
 import 'dart:convert';
 
+import 'package:bsrufoods/screens/home/history.dart';
 import 'package:bsrufoods/screens/home/order.dart';
 import 'package:bsrufoods/screens/order/send_order.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -22,6 +23,7 @@ class _HomelistState extends State<Homelist> {
   String username;
   List orderAll = [];
   List orderSend = [];
+  List douly = [];
   SendOrder sendOrder;
   bool statusBtnSend;
   @override
@@ -33,20 +35,21 @@ class _HomelistState extends State<Homelist> {
   }
 
   void sendNotification() async {
-    sendOrder.sendOrder(orderSend,username);
+    sendOrder.sendOrder(orderSend, username);
     setState(() {
       statusBtnSend = false;
     });
   }
 
   void claer() async {
-    sendOrder.claerOrder(orderSend,username);
-    setState(() {
-       orderAll = [];
-       orderSend = [];
-      statusBtnSend = false;
+    await sendOrder.claerOrder(orderSend, username).then((value){
+      setState(() {
+        orderAll = [];
+        orderSend = [];
+        statusBtnSend = false;
+      });
     });
-      await getdata();
+    await getdata();
   }
 
   void getUser() async {
@@ -66,6 +69,7 @@ class _HomelistState extends State<Homelist> {
   Future getdata() async {
     await firestore
         .collection("orders")
+        .orderBy("orderList", descending: false)
         .where("shopId", isEqualTo: shopid)
         .where("staOrder", isEqualTo: true)
         .where("history", isEqualTo: false)
@@ -75,6 +79,7 @@ class _HomelistState extends State<Homelist> {
         getrefer(element.data(), element.id);
       });
     });
+    return true;
   }
 
   void getrefer(final refer, String orderid) async {
@@ -89,19 +94,21 @@ class _HomelistState extends State<Homelist> {
     myOrder["time"] = refer["time"];
     myOrder["staComent"] = refer["staComent"];
     myOrder["staOrder"] = refer["staOrder"];
+    myOrder["statusbtn"] = false;
     myOrder["time"] = refer["time"];
+    myOrder["nameSend"] = [];
     setState(() {
       orderAll.add(myOrder);
+    setOrderdouly();
     });
-    print(orderAll);
   }
 
   Widget buttonmenu() {
     return FloatingActionButton.extended(
       heroTag: null,
-      onPressed:  () {
+      onPressed: () {
         MaterialPageRoute route =
-            MaterialPageRoute(builder: (BuildContext context) => Order());
+            MaterialPageRoute(builder: (BuildContext context) => Order(shopid));
         Navigator.push(context, route);
       },
       tooltip: 'increment',
@@ -112,7 +119,10 @@ class _HomelistState extends State<Homelist> {
 
   Widget buttonlist() {
     return FloatingActionButton.extended(
-      onPressed: null,
+      onPressed: (){
+        MaterialPageRoute route = MaterialPageRoute(builder: (BuildContext context)=>History(orderAll));
+        Navigator.push(context, route);
+      },
       heroTag: null,
       tooltip: 'increment',
       label: Text("ประวัติการส่ง"),
@@ -121,117 +131,354 @@ class _HomelistState extends State<Homelist> {
   }
 
   Widget showOrderTime() {
-    return ListView.separated(
-        itemBuilder: (context, index) {
-          return orderAll[index]["time"] == null ? Container(): Container(
-            padding: EdgeInsets.all(15.0),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Column(
-                  children: [
-                    Text(orderAll[index]["orderId"],style: TextStyle(fontSize: 18.0),),
-                   orderAll[index]["time"] == null ? Text("") :Text("เวลารับ ${orderAll[index]["time"].toString()}"),
-                  ],
-                ),
-                Container(
-                    width: 200,
+    return RefreshIndicator(
+          onRefresh: getRefresh,
+          color: Color.fromRGBO(255, 51, 247, 1),
+          child: ListView.separated(
+          itemBuilder: (context, index) {
+            return orderAll[index]["time"] == null
+                ? Container()
+                : Container(
+                    padding: EdgeInsets.all(15.0),
                     child: Column(
-                        children: List.generate(
-                            orderAll[index]["detail"].length, (numa) {
-                      return orderAll[index]["detailSta"][numa]["status"] ? Container() : Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          Text(orderAll[index]["detail"][numa]["name"],style: TextStyle(fontSize: 18.0),),
-                          Row(
-                            children: [
-                          Text("X${orderAll[index]["detail"][numa]["count"]}",style: TextStyle(fontSize: 18.0),),
-                              Checkbox(
-                    value: orderAll[index]["detail"][numa]["status"],
-                    onChanged: (bool value) {
-                      setState(() {
-                        orderAll[index]["detail"][numa]["status"] = value;
-                        if(value){
-                          var check = orderSend.indexWhere((element) => element["userId"] == orderAll[index]["userId"]);
-                          orderSend.add(orderAll[index]);
-                          
-                        }else{
-                          orderSend.remove(orderAll[index]);
-                        }
-                        
-                        print(jsonEncode(orderSend));
-                      });
-                    },
-                  ),
-                            ],
-                          )
-                        ],
-                      );
-                    }))),
-                
-              ],
-            ),
-          );
-        },
-        separatorBuilder: (context, index) => orderAll[index]["time"] == null ? Container() : Divider(),
-        itemCount: orderAll.length);
+                      children: [
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Column(
+                              children: [
+                                Text(
+                                  orderAll[index]["orderId"],
+                                  style: TextStyle(fontSize: 18.0),
+                                ),
+                                orderAll[index]["time"] == null
+                                    ? Text("")
+                                    : Text(
+                                        "เวลารับ ${orderAll[index]["time"].toString()}"),
+                              ],
+                            ),
+                            Container(
+                                width: 200,
+                                child: Column(
+                                    children: List.generate(
+                                        orderAll[index]["detail"].length, (numa) {
+                                  return orderAll[index]["detailSta"][numa]
+                                          ["status"]
+                                      ? Container()
+                                      : Row(
+                                          mainAxisAlignment:
+                                              MainAxisAlignment.spaceBetween,
+                                          children: [
+                                            Column(
+                                              children: [
+                                                Container(
+                                            width: 120,
+                                            child: Text(
+                                              orderAll[index]["detail"][numa]
+                                                  ["name"],
+                                              style: TextStyle(fontSize: 18.0),
+                                            ),
+                                          ),
+                                
+                                              ],
+                                            ),
+                                            Row(
+                                              children: [
+                                                Text(
+                                                  "X${orderAll[index]["detail"][numa]["count"]}",
+                                                  style:
+                                                      TextStyle(fontSize: 18.0),
+                                                ),
+                                                Checkbox(
+                                                  value: orderAll[index]["detail"]
+                                                      [numa]["status"],
+                                                  onChanged: (bool value) {
+                                                    setState(() {
+                                                      orderAll[index]
+                                                          ["statusbtn"] = value;
+                                                      orderAll[index]["detail"]
+                                                              [numa]["status"] =
+                                                          value;
+                                                      if (value) {
+                                                        var check = orderSend
+                                                            .indexWhere((element) =>
+                                                                element[
+                                                                    "userId"] ==
+                                                                orderAll[index]
+                                                                    ["userId"]);
+                                                        orderSend
+                                                            .add(orderAll[index]);
+                                                      } else {
+                                                        orderSend.remove(
+                                                            orderAll[index]);
+                                                      }
+
+                                                      print(
+                                                          jsonEncode(orderSend));
+                                                    });
+                                                  },
+                                                ),
+                                              ],
+                                            )
+                                          ],
+                                        );
+                                }))),
+                          ],
+                        ),
+                        orderAll[index]["statusbtn"]
+                            ? Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  SizedBox(
+                                      width: 115,
+                                      child: OutlineButton(
+                                          child: Row(
+                                            children: [
+                                              Icon(Icons.send),
+                                              Text("กดเพื่อส่ง")
+                                            ],
+                                          ),
+                                          onPressed: () => alertSennd())),
+                                  Padding(padding: EdgeInsets.only(right: 7)),
+                                  SizedBox(
+                                      width: 95,
+                                      child: OutlineButton(
+                                          child: Row(
+                                            children: [
+                                              Icon(Icons.cancel_outlined),
+                                              Text("เคลียร์")
+                                            ],
+                                          ),
+                                          onPressed: () => alertClaer()))
+                                ],
+                              )
+                            : Container()
+                      ],
+                    ),
+                  );
+          },
+          separatorBuilder: (context, index) {
+            return orderAll[index]["time"] == null ? Container() : Divider();
+          },
+          itemCount: orderAll.length),
+    );
+  }
+
+  Future getRefresh()async{
+      setState(() {
+        orderAll = [];
+        orderSend = [];
+        douly = [];
+        statusBtnSend = false;
+      });
+    await getdata();
+  }
+
+  void setOrderdouly(){
+        orderAll.map((orderData){
+             orderData["detail"].map((daw) {
+               douly.add(daw);
+               var checkname = douly.indexWhere((element) => element["name"] == daw["name"]);
+          // print("ss = ${daw["name"]}");        
+                if(checkname == -1 ){
+                    
+                }else{
+                                      
+                }
+             }).toList();
+        }).toList();
+        print("ss = $douly");
+  }
+
+  Widget showOrderDouly() {
+       return Text("awdhu");
   }
 
   Widget showOrder() {
-    return ListView.separated(
-        itemBuilder: (context, index) {
-          return Container(
-            padding: EdgeInsets.all(15.0),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Column(
-                  children: [
-                    Text(orderAll[index]["orderId"],style: TextStyle(fontSize: 18.0),),
-                   orderAll[index]["time"] == null ? Text("") :Text("เวลารับ ${orderAll[index]["time"].toString()}"),
-                  ],
-                ),
-                Container(
-                    width: 200,
-                    child: Column(
-                        children: List.generate(
-                            orderAll[index]["detail"].length, (numa) {
-                      return orderAll[index]["detailSta"][numa]["status"] ? Container() : Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          Text(orderAll[index]["detail"][numa]["name"],style: TextStyle(fontSize: 18.0),),
-                          Row(
-                            children: [
-                          Text("X${orderAll[index]["detail"][numa]["count"]}",style: TextStyle(fontSize: 18.0),),
-                              Checkbox(
-                    value: orderAll[index]["detail"][numa]["status"],
-                    onChanged: (bool value) {
-                      setState(() {
-                        orderAll[index]["detail"][numa]["status"] = value;
-                        if(value){
-                          var check = orderSend.indexWhere((element) => element["userId"] == orderAll[index]["userId"]);
-                          orderSend.add(orderAll[index]);
-                          
-                        }else{
-                          orderSend.remove(orderAll[index]);
-                        }
-                        
-                        print(jsonEncode(orderSend));
-                      });
-                    },
+    return RefreshIndicator(
+            onRefresh: getRefresh,
+            color: Color.fromRGBO(255, 51, 247, 1),
+          child: ListView.separated(
+          itemBuilder: (context, index) {
+            return Container(
+              padding: EdgeInsets.all(15.0),
+              child: Column(
+                children: [
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Container(
+                        width: 50,
+                        child: Column(
+                          children: [
+                            Text(
+                              orderAll[index]["orderId"],
+                              style: TextStyle(fontSize: 18.0),
+                            ),
+                            orderAll[index]["time"] == null
+                                ? Text("")
+                                : Text(
+                                    "เวลารับ ${orderAll[index]["time"].toString()}"),
+                           
+                          ],
+                        ),
+                      ),
+                      Container(
+                          width: 250,
+                          child: Column(
+                              children: List.generate(
+                                  orderAll[index]["detail"].length, (numa) {
+                            return orderAll[index]["detailSta"][numa]["status"]
+                                ? Container()
+                                : Row(
+                                    mainAxisAlignment:
+                                        MainAxisAlignment.spaceBetween,
+                                    children: [
+                                      Column(
+                                        children: [
+                                          Container(
+                                            width: 120,
+                                            child: Text(
+                                              orderAll[index]["detail"][numa]
+                                                  ["name"],
+                                              style: TextStyle(fontSize: 18.0),
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                      Row(
+                                        children: [
+                                          Text(
+                                            "X${orderAll[index]["detail"][numa]["count"]}",
+                                            style: TextStyle(fontSize: 18.0),
+                                          ),
+                                          Checkbox(
+                                            value: orderAll[index]["detail"][numa]
+                                                ["status"],
+                                            onChanged: (bool value) {
+                                              setState(() {
+                                                orderAll[index]["statusbtn"] =
+                                                    value;
+                                                orderAll[index]["detail"][numa]
+                                                    ["status"] = value;
+                                                if (value) {
+                                                  orderAll[index]["nameSend"].add(orderAll[index]["detail"][numa]
+                                                    ["name"]);
+                                                  var check = orderSend
+                                                      .indexWhere((element) =>
+                                                          element["userId"] ==
+                                                          orderAll[index]
+                                                              ["userId"]);
+                                                  orderSend.add(orderAll[index]);
+                                                } else {
+                                                  orderAll[index]["nameSend"].remove(orderAll[index]["detail"][numa]
+                                                    ["name"]);
+                                                  orderSend
+                                                      .remove(orderAll[index]);
+                                                }
+
+                                                print(orderAll[index]["nameSend"]);
+                                              });
+                                            },
+                                          ),
+                                        ],
+                                      )
+                                    ],
+                                  );
+                          }))),
+                    ],
                   ),
-                            ],
-                          )
-                        ],
-                      );
-                    }))),
-                
-              ],
-            ),
-          );
-        },
-        separatorBuilder: (context, index) => Divider(),
-        itemCount: orderAll.length);
+                  orderAll[index]["statusbtn"]
+                      ? Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            SizedBox(
+                                width: 115,
+                                child: OutlineButton(
+                                    child: Row(
+                                      children: [
+                                        Icon(Icons.send),
+                                        Text("กดเพื่อส่ง")
+                                      ],
+                                    ),
+                                    onPressed: () => alertSennd())),
+                            Padding(padding: EdgeInsets.only(right: 7)),
+                            SizedBox(
+                                width: 95,
+                                child: OutlineButton(
+                                    child: Row(
+                                      children: [
+                                        Icon(Icons.cancel_outlined),
+                                        Text("เคลียร์")
+                                      ],
+                                    ),
+                                    onPressed: () => alertClaer()))
+                          ],
+                        )
+                      : Container()
+                ],
+              ),
+            );
+          },
+          separatorBuilder: (context, index) {
+            return Divider();
+          },
+          itemCount: orderAll.length),
+    );
+  }
+
+  void alertSennd() {
+    Alert(
+      context: context,
+      title: "ต้องการส่ง",
+      buttons: [
+        DialogButton(
+          onPressed: statusBtnSend
+              ? () {}
+              : () {
+                  setState(() {
+                    statusBtnSend = true;
+                  });
+                  sendNotification();
+                  Navigator.pop(context);
+                },
+          child: statusBtnSend
+              ? CircularProgressIndicator()
+              : Text(
+                  "ส่ง",
+                  style: TextStyle(color: Colors.white, fontSize: 20),
+                ),
+          color: Color.fromRGBO(255, 51, 247, 1),
+        ),
+      ],
+    ).show();
+  }
+
+  void alertClaer() {
+    Alert(
+      context: context,
+      title: "ต้องการเคลียรายการ",
+      buttons: [
+        DialogButton(
+          onPressed: statusBtnSend
+              ? () {}
+              : () {
+                  setState(() {
+                    statusBtnSend = true;
+                  });
+                  claer();
+                  Navigator.pop(context);
+                },
+          child: statusBtnSend
+              ? CircularProgressIndicator()
+              : Text(
+                  "เคลีย",
+                  style: TextStyle(color: Colors.white, fontSize: 20),
+                ),
+          color: Color.fromRGBO(255, 51, 247, 1),
+        ),
+      ],
+    ).show();
   }
 
   @override
@@ -243,71 +490,6 @@ class _HomelistState extends State<Homelist> {
           actionsIconTheme: IconThemeData(color: Colors.white, size: 28),
           leading: Text(""),
           centerTitle: true,
-          actions: <Widget>[
-            IconButton(
-                icon: Icon(
-                  Icons.send,
-                ),
-                onPressed: orderSend.length == 0 ? null : () {
-                  Alert(
-                    context: context,
-                    title: "ต้องการส่ง",
-                    buttons: [
-                      DialogButton(
-                        onPressed: statusBtnSend
-                            ? () {}
-                            : () {
-                                setState(() {
-                                  statusBtnSend = true;
-                                });
-                                sendNotification();
-                                Navigator.pop(context);
-                              },
-                        child: statusBtnSend
-                            ? CircularProgressIndicator()
-                            : Text(
-                                "ส่ง",
-                                style: TextStyle(
-                                    color: Colors.white, fontSize: 20),
-                              ),
-                        color: Color.fromRGBO(255, 51, 247, 1),
-                      ),
-                    ],
-                  ).show();
-                }),
-            IconButton(
-              icon: Icon(
-                Icons.cancel,
-              ),
-              onPressed: orderSend.length == 0 ? null : () {
-                Alert(
-                    context: context,
-                    title: "ต้องการเคลียรายการ",
-                    buttons: [
-                      DialogButton(
-                        onPressed: statusBtnSend
-                            ? () {}
-                            : () {
-                                setState(() {
-                                  statusBtnSend = true;
-                                });
-                                claer();
-                                Navigator.pop(context);
-                              },
-                        child: statusBtnSend
-                            ? CircularProgressIndicator()
-                            : Text(
-                                "เคลีย",
-                                style: TextStyle(
-                                    color: Colors.white, fontSize: 20),
-                              ),
-                        color: Color.fromRGBO(255, 51, 247, 1),
-                      ),
-                    ],
-                  ).show();
-              },
-            ),
-          ],
           bottom: PreferredSize(
             preferredSize: Size.fromHeight(65),
             child: Material(
@@ -358,7 +540,7 @@ class _HomelistState extends State<Homelist> {
           children: [
             showOrder(),
             showOrderTime(),
-            Text("asd"),
+            showOrderDouly()
           ],
         ),
         floatingActionButton: Row(

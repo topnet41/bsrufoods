@@ -16,7 +16,7 @@ class _MenuState extends State<Menu> {
   FirebaseAuth _firebaseAuth = FirebaseAuth.instance;
   FirebaseFirestore firestore = FirebaseFirestore.instance;
   DocumentSnapshot snapshot,menu;
-  int a ;
+  int a = 0;
 
   void getdata() async {
     final document = await firestore
@@ -27,7 +27,6 @@ class _MenuState extends State<Menu> {
     final data = await snapshot["menus"].get();
     menu = data;
     a = menu["menudetail"].length;
-    print(a);
     if(menu.exists){
         setState(() {});
     }else{
@@ -50,7 +49,7 @@ class _MenuState extends State<Menu> {
             style: TextStyle(fontSize: 24),
           ))
         : ListView.separated(
-            itemCount: menu["menudetail"].length,
+            itemCount: a,
             separatorBuilder: (context, index) => menu["menudetail"][(a-1)-index]["status"] == statusFood ? Divider() :Container(),
             itemBuilder: (context, index) {
               return menu["menudetail"][(a-1)-index]["status"] == statusFood ? ListTile(
@@ -85,7 +84,7 @@ class _MenuState extends State<Menu> {
                     text: "ตัวเลือกเมนู",
                   ),
                   Tab(
-                    text: "เมนูที่ปิด",
+                    text: "เมนูที่ปิดการขาย",
                   ),
                 ],
               ),

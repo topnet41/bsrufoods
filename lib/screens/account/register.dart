@@ -194,6 +194,8 @@ class _RegisterState extends State<Register> {
     map['statusShop'] = true;
     map['bank'] = bank;
     map['cash'] = true;
+    map['timeon'] = "09:00";
+    map['timeoff'] = "16:00";
     map['orderCount'] = count;
     map['tokenUser'] = FieldValue.arrayUnion(tokenUser);
     map['userStatus'] = "admin";

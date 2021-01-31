@@ -23,6 +23,8 @@ class _EditUserState extends State<EditUser> {
   final userController = TextEditingController();
   final phoneNumber = TextEditingController();
   final reCeipt = TextEditingController();
+  final timeon = TextEditingController();
+  final timeof = TextEditingController();
   String bank, bankGet;
   var now = DateTime.now();
   var documentUser;
@@ -82,6 +84,8 @@ class _EditUserState extends State<EditUser> {
         reCeipt.text = value["prompt"];
         bank = value["bank"];
         bankGet = value["bank"];
+        timeon.text = value["timeon"];
+        timeof.text = value["timeof"];
       });
     });
   }
@@ -193,9 +197,12 @@ class _EditUserState extends State<EditUser> {
     map['profile'] = urlPhoto;
     map['barcode'] = urlPhoto1;
     map['phone'] = phoneNumber.text;
+    map['timeon'] = timeon.text;
+    map['timeof'] = timeof.text;
     map['bank'] = bank;
 
     if (user != null) {
+
       await user.updateProfile(displayName: name.text, photoURL: urlPhoto);
       await firestore
           .collection("member")
@@ -326,6 +333,40 @@ class _EditUserState extends State<EditUser> {
                               onPressed: () {
                                 getImage(ImageSource.gallery, 1);
                               })),
+                      Text("เวลา เปิด-ปิด ร้านค้า"),
+                      Divider(),
+                      Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Column(
+                            children: [
+                              Text("เวลาเปิด"),
+                              Container(
+                                width: MediaQuery.of(context).size.width * 0.2,
+                                child: _createinput(
+                                    controller: timeon,
+                                    hinttext: "00:00",
+                                    keyboardType: TextInputType.datetime,
+                                    maxLength: 5),
+                              ),
+                            ],
+                          ),
+                          Padding(padding: EdgeInsets.only(right:10)),
+                          Column(
+                            children: [
+                              Text("เวลาปิด"),
+                              Container(
+                                width: MediaQuery.of(context).size.width * 0.2,
+                                child: _createinput(
+                                    controller: timeof,
+                                    hinttext: "00:00",
+                                    keyboardType: TextInputType.datetime,
+                                    maxLength: 5),
+                              ),
+                            ],
+                          ),
+                        ],
+                      ),
                       SizedBox(
                           width: double.infinity,
                           child: RaisedButton(
