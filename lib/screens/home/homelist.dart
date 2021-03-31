@@ -86,6 +86,7 @@ class _HomelistState extends State<Homelist> {
     Map<String, dynamic> myOrder = Map();
     snapshot = await refer["detail"].get();
     myOrder["orderId"] = refer["orderId"];
+    myOrder["orderList"] = refer["orderList"];
     myOrder["userId"] = refer["userId"];
     myOrder["orderPath"] = orderid;
     myOrder["detail"] = snapshot["detail"].toList();
@@ -99,7 +100,7 @@ class _HomelistState extends State<Homelist> {
     myOrder["nameSend"] = [];
     setState(() {
       orderAll.add(myOrder);
-    setOrderdouly();
+      orderAll.sort((m1,m2)=>m1["orderList"].compareTo(m2["orderList"]));
     });
   }
 
@@ -274,21 +275,12 @@ class _HomelistState extends State<Homelist> {
     await getdata();
   }
 
-  void setOrderdouly(){
-        orderAll.map((orderData){
-             orderData["detail"].map((daw) {
-               douly.add(daw);
-               var checkname = douly.indexWhere((element) => element["name"] == daw["name"]);
-          // print("ss = ${daw["name"]}");        
-                if(checkname == -1 ){
-                    
-                }else{
-                                      
-                }
-             }).toList();
-        }).toList();
-        print("ss = $douly");
-  }
+  // void setOrderdouly(){
+  //      orderAll.sort((m1,m2)=>m1["orderList"].compareTo(m2["orderList"]));
+  //      orderAll.forEach((element) {
+  //        print(element["orderList"]);
+  //      });
+  // }
 
   Widget showOrderDouly() {
        return Text("awdhu");

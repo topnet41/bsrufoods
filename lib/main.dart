@@ -5,19 +5,24 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
+import 'package:intl/date_symbol_data_local.dart';
 import 'screens/account/register_fb.dart';
 import 'screens/home.dart';
+import 'package:intl/intl.dart';
 
 FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin =
     FlutterLocalNotificationsPlugin();
 
 void main(List<String> args) async {
+  Intl.defaultLocale ="th";
+  initializeDateFormatting();
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp();
   runApp(
     Asp(),
   );
 }
+
 
 class Asp extends StatelessWidget {
   @override

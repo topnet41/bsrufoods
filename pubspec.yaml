@@ -38,6 +38,7 @@ dependencies:
   image_picker: ^0.6.7+14
   intl: ^0.16.1
   qr_code_scanner: ^0.1.0
+  
 
 dev_dependencies:
   flutter_launcher_icons: "^0.8.0"

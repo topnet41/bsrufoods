@@ -31,6 +31,7 @@ class _NotifiState extends State<Notifi> {
     Map<String, dynamic> order = Map();
     orderDetail = await data["detail"].get();
     order["orderId"] = data["orderId"];
+    order["orderList"] = data["orderList"];
     order["orderDate"] = data["orderDate"];
     order["status"] = {
       "staOrder":data["staOrder"],
@@ -47,6 +48,10 @@ class _NotifiState extends State<Notifi> {
     order["orderpath"] = id;
     setState(() {
       noti.add(order);
+      noti.sort((m1,m2)=>m2["orderList"].compareTo(m1["orderList"]));
+      noti.forEach((element) {
+        print(element["orderList"]);
+      });
     });
     print(order);
   }
