@@ -237,7 +237,10 @@ class _AddMenuState extends State<AddMenu> {
   Future<void> setdata() async {
     var user = firebaseAuth.currentUser;
     num priceMenu = int.parse(price.text);
+    Random random = Random();
+    int i = random.nextInt(100000);
     Map<String, dynamic> menudetail = Map();
+    menudetail["food_id"] = i;
     menudetail["name"] = name.text;
     menudetail["price"] = priceMenu;
     menudetail["image"] = urlPhoto;

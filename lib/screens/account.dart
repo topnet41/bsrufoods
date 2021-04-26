@@ -1,6 +1,7 @@
 import 'package:bsrufoods/screens/account/edituser.dart';
 import 'package:bsrufoods/screens/account/review.dart';
 import 'package:bsrufoods/screens/login.dart';
+import 'package:bsrufoods/screens/report/report.dart';
 import 'package:bsrufoods/screens/setting.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -174,7 +175,11 @@ class _AccountState extends State<Account> {
               ListTile(
                 leading: Icon(Icons.leaderboard, size: 40),
                 title: Text("การขาย"),
-                onTap: () {},
+                onTap: () {
+                  MaterialPageRoute route = MaterialPageRoute(
+                      builder: (BuildContext context) => Report(userid));
+                  Navigator.of(context).push(route);
+                },
               ),
               Divider(),
               ListTile(

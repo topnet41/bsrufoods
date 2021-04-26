@@ -8,7 +8,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:rflutter_alert/rflutter_alert.dart';
-import 'package:http/http.dart' as http;
+
 
 class Homelist extends StatefulWidget {
   @override
@@ -23,7 +23,6 @@ class _HomelistState extends State<Homelist> {
   String username;
   List orderAll = [];
   List orderSend = [];
-  List douly = [];
   SendOrder sendOrder;
   bool statusBtnSend;
   @override
@@ -79,7 +78,6 @@ class _HomelistState extends State<Homelist> {
         getrefer(element.data(), element.id);
       });
     });
-    return true;
   }
 
   void getrefer(final refer, String orderid) async {
@@ -91,6 +89,7 @@ class _HomelistState extends State<Homelist> {
     myOrder["orderPath"] = orderid;
     myOrder["detail"] = snapshot["detail"].toList();
     myOrder["detailSta"] = snapshot["detail"].toList();
+    myOrder["detaildouly"] = snapshot["detail"].toList();
     myOrder["history"] = refer["history"];
     myOrder["time"] = refer["time"];
     myOrder["staComent"] = refer["staComent"];
@@ -269,21 +268,54 @@ class _HomelistState extends State<Homelist> {
       setState(() {
         orderAll = [];
         orderSend = [];
-        douly = [];
         statusBtnSend = false;
       });
     await getdata();
   }
 
-  // void setOrderdouly(){
-  //      orderAll.sort((m1,m2)=>m1["orderList"].compareTo(m2["orderList"]));
-  //      orderAll.forEach((element) {
-  //        print(element["orderList"]);
-  //      });
-  // }
 
   Widget showOrderDouly() {
-       return Text("awdhu");
+      int i = 0 ;
+      int count ;
+      int indexWhrere = 0  ;
+      var douly = [];
+      List data = [];
+      orderAll.length == 0 ? print("รอสักครู่") : douly = new List.from(orderAll[0]["detaildouly"]);
+      orderAll.forEach((dataOrder) {
+        dataOrder["detail"].forEach((dataOrderDetail) {
+        int countDouly = 0;
+          if(i != 0){
+            indexWhrere =  douly.indexWhere((element) => element["name"] == dataOrderDetail["name"]);
+            // print("${dataOrderDetail["name"]} = ${dataOrderDetail["status"]}");
+            // print(indexWhrere);
+            if(indexWhrere != -1 && !douly[indexWhrere]["status"]){
+              count = dataOrderDetail["count"];
+              countDouly = (count + douly[indexWhrere]["count"]);
+              douly[indexWhrere]["count_douly"] = countDouly;
+              douly[indexWhrere]["sort"] = indexWhrere;
+              data.add(douly[indexWhrere]);
+              data.sort((m1,m2)=>m1["sort"].compareTo(m2["sort"]));
+              // print("$douly \n");
+              print("${douly[indexWhrere]["name"]} = $countDouly");
+            }
+          }
+        });
+        i++;
+        // print(data);
+      });
+      return ListView.separated(itemBuilder: (context,index){
+        return Container(
+          padding: EdgeInsets.all(25),
+          child: Row(
+              children: [
+                Expanded(child: Text("${(index+1)}",style: TextStyle(fontSize: 18))),
+                Expanded(child: Text("${data[index]['name']}",style: TextStyle(fontSize: 18),)),
+                Expanded(child: Text("X${data[index]['count_douly']}",style: TextStyle(fontSize: 18),textAlign: TextAlign.right,))
+              ],
+          ),
+        ); 
+      }, separatorBuilder: (context,index)=>Divider(), 
+      itemCount: data.length);
   }
 
   Widget showOrder() {
@@ -311,12 +343,11 @@ class _HomelistState extends State<Homelist> {
                                 ? Text("")
                                 : Text(
                                     "เวลารับ ${orderAll[index]["time"].toString()}"),
-                           
                           ],
                         ),
                       ),
                       Container(
-                          width: 250,
+                          width: 300,
                           child: Column(
                               children: List.generate(
                                   orderAll[index]["detail"].length, (numa) {
@@ -329,7 +360,7 @@ class _HomelistState extends State<Homelist> {
                                       Column(
                                         children: [
                                           Container(
-                                            width: 120,
+                                            width: 170,
                                             child: Text(
                                               orderAll[index]["detail"][numa]
                                                   ["name"],
@@ -464,7 +495,7 @@ class _HomelistState extends State<Homelist> {
           child: statusBtnSend
               ? CircularProgressIndicator()
               : Text(
-                  "เคลีย",
+                  "เคลียร์",
                   style: TextStyle(color: Colors.white, fontSize: 20),
                 ),
           color: Color.fromRGBO(255, 51, 247, 1),
@@ -530,7 +561,9 @@ class _HomelistState extends State<Homelist> {
         ),
         body: TabBarView(
           children: [
-            showOrder(),
+            Container(
+              padding: EdgeInsets.only(bottom: 80),
+              child: showOrder()),
             showOrderTime(),
             showOrderDouly()
           ],

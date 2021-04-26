@@ -133,7 +133,7 @@ class _OrderState extends State<Order> {
           borderColor: Colors.red,
           borderRadius: 10,
           borderLength: 30,
-          borderWidth: 10,
+          borderWidth: 10,    
           cutOutSize: scanArea),
     );
   }
@@ -157,6 +157,7 @@ class _OrderState extends State<Order> {
         Navigator.push(context, route).then((value) {setState(() {
           ss = [];
           qrText = "";
+          print("Heelow World ");
         });});
         }
   }
