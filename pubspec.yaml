@@ -68,6 +68,7 @@ flutter:
   assets:
    - images/logo.png
    - images/fb.png
+   - images/profile.png
    - images/empty.jpg
 
   # An image asset can refer to one or more resolution-specific "variants", see

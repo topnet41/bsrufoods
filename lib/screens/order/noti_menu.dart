@@ -4,10 +4,10 @@ import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 
 class NotiMenu extends StatefulWidget {
-  final String shopId;
+  final String userId;
   final String orderpath;
   final Map<String, dynamic> order;
-  NotiMenu(this.shopId, this.orderpath, this.order);
+  NotiMenu(this.userId, this.orderpath, this.order);
 
   @override
   _NotiMenuState createState() => _NotiMenuState();
@@ -17,10 +17,10 @@ class _NotiMenuState extends State<NotiMenu> {
   FirebaseFirestore firestore = FirebaseFirestore.instance;
   Map<String, dynamic> dataShop = Map();
   int total = 0;
-  void getShop() async {
+  void getUser() async {
     await firestore
         .collection("member")
-        .where("userId", isEqualTo: widget.shopId)
+        .where("userId", isEqualTo: widget.userId)
         .get()
         .then((value) {
       setState(() {
@@ -39,7 +39,7 @@ class _NotiMenuState extends State<NotiMenu> {
       total = total + pice["price"] * pice["count"];
       setState(() {});
     }).toList();
-    getShop();
+    getUser();
     print("id = ${widget.order}");
   }
 
@@ -72,6 +72,15 @@ class _NotiMenuState extends State<NotiMenu> {
                     : Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
+                          Center(
+                            child: Container(
+                              decoration: BoxDecoration(
+                                borderRadius: BorderRadius.circular(100),
+                                image: DecorationImage(image: NetworkImage(dataShop["photo"]),fit: BoxFit.cover)
+                              ),
+                              width: 150,
+                              height: 150,
+                            ),),
                           Row(
                             mainAxisAlignment: MainAxisAlignment.spaceBetween,
                             children: [

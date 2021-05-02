@@ -1,6 +1,8 @@
 import 'package:bsrufoods/controller/auth_controller.dart';
 import 'package:bsrufoods/screens/account/register.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:rflutter_alert/rflutter_alert.dart';
 
 class Login extends StatefulWidget {
   @override
@@ -8,12 +10,15 @@ class Login extends StatefulWidget {
 
 }
 
+class _LoginState extends State<Login> {
 
-
-final keyfrom = GlobalKey<FormState>();
-final userController = TextEditingController();
-final passwordController = TextEditingController();
-Authcontroller authController;
+  FirebaseAuth firebaseAuth = FirebaseAuth.instance;
+  final keyfrom = GlobalKey<FormState>();
+  final userController = TextEditingController();
+  final passwordController = TextEditingController();
+  final email = TextEditingController();
+  String msg = "";
+  Authcontroller authController;
 
 
 
@@ -25,8 +30,59 @@ void _onLogin() {
   }
 }
 
+  void showdialog(){
+    Alert(
+      context: context,
+      title: "ลืมรหัสผ่าน?",
+      content: Column(children: [
+        _createinput(controller: email,hinttext: "E-mail",keyboardType: TextInputType.emailAddress),
+        Text(msg,style: TextStyle(color: Colors.red),)
+      ],),
+      buttons: [
+          DialogButton(
+          child: Text("กดเพื่อส่งข้อมูล",style: TextStyle(color: Colors.white),),
+          color: Color.fromRGBO(255, 51, 247, 1.0),
+          onPressed: (){
+            if(email.text == ""){
+              setState(() {
+                msg = "กรุณากรอกอีเมล";
+              });
+              Navigator.pop(context);
+              showdialog();
+            }else{
+                firebaseAuth.sendPasswordResetEmail(email: email.text).catchError((e,sd){
+                   msg = "";
+                  setState(() {});
+                  Navigator.pop(context);
+                  alertstatus("ไม่สำเร็จ",AlertType.error, "กรุณากดส่งใหม่อีกครั้ง");
+                }).then((value){
+                  msg = "";
+                  email.clear();
+                  setState(() {});
+                  Navigator.pop(context);
+                  alertstatus("สำเร็จ",AlertType.success, "ไปที่อีเมลเพื่อยืนยันรหัสผ่าน");
+                });
+              }
+            
+          })
+      ],
+      
+    ).show();
+  }
 
-class _LoginState extends State<Login> {
+   void alertstatus(String status,AlertType icon,String desc){
+    Alert(type: icon,
+          context: context,
+          title: status,
+          desc: desc,
+          buttons: [
+            DialogButton(child: Text("ตกลง",style: TextStyle(color: Colors.white),),
+            onPressed: ()=>Navigator.pop(context),
+            )
+          ]
+    ).show();
+  }
+
   @override
   void initState() {
     super.initState();
@@ -64,6 +120,17 @@ class _LoginState extends State<Login> {
                               controller: passwordController,
                               hinttext: "Password",
                               isPassword: true),
+                          Align(
+                            alignment: Alignment.centerRight,
+                            child: InkWell(
+                              onTap: ()=>showdialog(),
+                              child: Text(
+                                "ลืมรหัสผ่าน ?",
+                                style:
+                                    TextStyle(color: Colors.blue, fontSize: 18),
+                              ),
+                            )),
+                          Padding(padding: EdgeInsets.symmetric(vertical: 10)),
                           SizedBox(
                             width: double.infinity,
                             child: RaisedButton(

@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:charts_flutter/flutter.dart' as charts;
 import 'package:firebase_auth/firebase_auth.dart';
@@ -44,15 +46,16 @@ class ReportSale {
 
   Future<List> reportDaily(String date) async {
     int indexWhere = 0;
+    int index = 0;
     int count;
     menus.clear();
     await getMenu();
-    data.forEach((order) {
+    data.forEach((order)async{
       if (date == order["orderDate"]) {
         int count_report = 0;
         num price_report = 0;
         // print(date);
-        order["detail"].forEach((orderDetail) {
+        await order["detail"].forEach((orderDetail) {
           indexWhere =
               menus.indexWhere((food) => food["name"] == orderDetail["name"]);
           if (indexWhere != -1) {
@@ -63,11 +66,18 @@ class ReportSale {
             price_report = (count_report * menus[indexWhere]["price"]);
             menus[indexWhere]["price_report"] = price_report;
             menus[indexWhere]["count_report"] = count_report;
+          }else{
+            menus[index]["price_report"] = orderDetail["price"];
+            menus[index]["count_report"] = orderDetail["count"];
+            print("${menus[index]["name"]} = ${menus[index]["price_report"]}");
           }
+          index++;
         });
       }
     });
-    menus.sort((m2, m1) => m1["count_report"].compareTo(m2["count_report"]));
+    menus.removeWhere((element) => element["count_report"]==null);
+    menus.sort((m2,m1)=>m1["count_report"].compareTo(m2["count_report"]));
+    print(menus);
     return menus;
   }
 

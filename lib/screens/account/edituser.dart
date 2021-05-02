@@ -2,12 +2,14 @@ import 'dart:io';
 import 'dart:math';
 
 import 'package:bsrufoods/screens/home.dart';
+import 'package:bsrufoods/widget-picker/widget-date-time-picker.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 
 import 'package:flutter/material.dart';
+import 'package:flutter_datetime_picker/flutter_datetime_picker.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:rflutter_alert/rflutter_alert.dart';
 import 'package:select_form_field/select_form_field.dart';
@@ -85,7 +87,7 @@ class _EditUserState extends State<EditUser> {
         bank = value["bank"];
         bankGet = value["bank"];
         timeon.text = value["timeon"];
-        timeof.text = value["timeof"];
+        timeof.text = value["timeoff"];
       });
     });
   }
@@ -198,11 +200,10 @@ class _EditUserState extends State<EditUser> {
     map['barcode'] = urlPhoto1;
     map['phone'] = phoneNumber.text;
     map['timeon'] = timeon.text;
-    map['timeof'] = timeof.text;
+    map['timeoff'] = timeof.text;
     map['bank'] = bank;
 
     if (user != null) {
-
       await user.updateProfile(displayName: name.text, photoURL: urlPhoto);
       await firestore
           .collection("member")
@@ -229,6 +230,27 @@ class _EditUserState extends State<EditUser> {
         onPressed: () {
           getImage(ImageSource.camera, 0);
         });
+  }
+
+  void showtime(String statusTime){
+    DatePicker.showPicker(context, showTitleActions: true,
+                  onChanged: (date) {
+                    // time = "${date.hour}:${date.minute}";
+                  }, onConfirm: (date) {
+                    String hour,minute;
+                    date.hour<10 ? hour = "0${date.hour}" : hour = "${date.hour}";
+                    date.minute<10 ? minute = "0${date.minute}" : minute = "${date.minute}";
+                    var _time = "$hour:$minute";
+                    if(statusTime == "on"){
+                      timeon.text = _time;
+                    }else{
+                      timeof.text = _time;
+                    }
+                    setState(() {});
+                  },
+                      
+                      pickerModel: WidgetDateTimePicker(currentTime: DateTime.now()),
+                      locale: LocaleType.en);
   }
 
   Future getImage(ImageSource imageSource, int index) async {
@@ -269,14 +291,24 @@ class _EditUserState extends State<EditUser> {
                       Text("รูปภาพร้านค้า"),
                       Divider(),
                       _image != null
-                          ? Image.file(
-                              _image,
-                              width: 150,
-                              height: 150,
-                            )
+                          ? Container(
+                            decoration: BoxDecoration(
+                              borderRadius: BorderRadius.circular(100),
+                              image:DecorationImage(image: FileImage(_image))
+                            ),
+                            width:200,
+                            height:200
+                          )
                           : urlPhoto == null
                               ? Text("กำลังโหลดรูป")
-                              : Image.network(urlPhoto, width: 64),
+                              : Container(
+                                decoration: BoxDecoration(
+                                  borderRadius: BorderRadius.circular(100),
+                                  image: DecorationImage(image: NetworkImage(urlPhoto),fit: BoxFit.cover)
+                                ),
+                                width: 200,
+                                height: 200,
+                              ),
                       Row(
                         mainAxisSize: MainAxisSize.min,
                         children: [
@@ -304,8 +336,9 @@ class _EditUserState extends State<EditUser> {
                       SelectFormField(
                         type: SelectFormFieldType.dropdown, // or can be dialog
                         icon: Icon(Icons.account_balance),
-                        labelText: bank,
+                        labelText: "กรุณาเลิอกธนาคาร",
                         items: _items,
+                        initialValue: bank,
                         onChanged: (val) {
                           bank = val;
                         },
@@ -318,7 +351,8 @@ class _EditUserState extends State<EditUser> {
                           controller: reCeipt,
                           hinttext: "หมายเลขบัญชี",
                           keyboardType: TextInputType.number,
-                          maxLength: 12),
+                          maxLength: 12
+                          ),
                       getBarcode(),
                       SizedBox(
                           width: double.infinity,
@@ -347,11 +381,14 @@ class _EditUserState extends State<EditUser> {
                                     controller: timeon,
                                     hinttext: "00:00",
                                     keyboardType: TextInputType.datetime,
-                                    maxLength: 5),
+                                    maxLength: 5,
+                                    readOnly: true,
+                                    function: ()=>showtime("on")
+                                    ),
                               ),
                             ],
                           ),
-                          Padding(padding: EdgeInsets.only(right:10)),
+                          Padding(padding: EdgeInsets.only(right: 10)),
                           Column(
                             children: [
                               Text("เวลาปิด"),
@@ -361,7 +398,10 @@ class _EditUserState extends State<EditUser> {
                                     controller: timeof,
                                     hinttext: "00:00",
                                     keyboardType: TextInputType.datetime,
-                                    maxLength: 5),
+                                    maxLength: 5,
+                                    readOnly: true,
+                                    function: ()=>showtime("off")
+                                    ),
                               ),
                             ],
                           ),
@@ -392,12 +432,17 @@ class _EditUserState extends State<EditUser> {
       @required String hinttext,
       TextInputType keyboardType = TextInputType.text,
       bool isPassword = false,
-      int maxLength = 100}) {
+      bool readOnly = false,
+      int maxLength = 100,
+      void function() ,
+      }) {
     return Container(
       margin: EdgeInsets.symmetric(
         vertical: 8,
       ),
       child: TextFormField(
+        readOnly: readOnly,
+        onTap: function,
         maxLength: maxLength,
         controller: controller,
         keyboardType: keyboardType,

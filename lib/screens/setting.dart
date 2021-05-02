@@ -103,10 +103,10 @@ class _SettingState extends State<Setting> {
                 child: TextField(
                     controller: count,
                     keyboardType: TextInputType.number,
-                    decoration: InputDecoration(hintText: "ระบุจำนวนสั่งซื้อ")),
+                    decoration: InputDecoration(hintText: "ระบุราคาสั่งซื้อ")),
               ),
             ),
-            Text("การเปิดรับเงินสดกรุณาจำกัดจำนวนในการสั่ง"),
+            Text("การเปิดรับเงินสดกรุณาจำกัดราคาในการสั่ง \n ตัวอย่างสั่งได้ไม่เกิน 200 บาท",textAlign: TextAlign.center,),
             SizedBox(
               width: double.infinity,
               child: RaisedButton(child: Row(mainAxisSize: MainAxisSize.min,children: [

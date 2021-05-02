@@ -22,6 +22,7 @@ class _RegisterState extends State<Register> {
   final name = TextEditingController();
   final userController = TextEditingController();
   final passwordController = TextEditingController();
+  final passwordReplaceController = TextEditingController();
   final phoneNumber = TextEditingController();
   final reCeipt = TextEditingController();
   String bank ;
@@ -71,7 +72,7 @@ class _RegisterState extends State<Register> {
   Widget getBarcode() {
     return _imgReceipt != null
         ? Image.file(_imgReceipt, width: 100)
-        : CircularProgressIndicator();
+        : Icon(Icons.qr_code_scanner_rounded,size: 120,color: Colors.black,);
   }
 
   void _onSave() {
@@ -94,8 +95,9 @@ class _RegisterState extends State<Register> {
     } else {
       if (keyfrom.currentState.validate()) {
         keyfrom.currentState.save();
-        registerThread();
-        print(passwordController.text);
+        if(passwordController.text == passwordReplaceController.text){
+          registerThread();
+        }
       }
     }
   }
@@ -268,12 +270,28 @@ class _RegisterState extends State<Register> {
                       Text("รูปภาพร้านค้า"),
                       Divider(),
                       _image != null
-                          ? Image.file(
-                              _image,
-                              width: 150,
-                              height: 150,
-                            )
-                          : Image.asset("images/empty.jpg", width: 150),
+                          ? Container(
+                            decoration: BoxDecoration(
+                              borderRadius: BorderRadius.circular(100),
+                              image: DecorationImage(
+                                image: FileImage(_image),
+                                fit: BoxFit.cover
+                              )
+                            ),
+                            width:200,
+                            height:200,
+                          )
+                          : Container(
+                            decoration: BoxDecoration(
+                              borderRadius: BorderRadius.circular(100),
+                              image: DecorationImage(
+                                image: AssetImage("images/profile.png")
+                                ,fit: BoxFit.cover
+                              )
+                            ),
+                            width:200,
+                            height:200,
+                          ),
                       Row(
                         mainAxisSize: MainAxisSize.min,
                         children: [
@@ -297,6 +315,11 @@ class _RegisterState extends State<Register> {
                           hinttext: "รหัสผ่าน",
                           isPassword: true),
                       _createinput(
+                          controller: passwordReplaceController,
+                          hinttext: "ยืนยันรหัสผ่านอีกครั้ง",
+                          keyboardType: TextInputType.emailAddress
+                          ,isPassword: true),
+                      _createinput(
                           controller: phoneNumber,
                           hinttext: "เบอร์โทรศัพท์",
                           keyboardType: TextInputType.number,
@@ -317,6 +340,7 @@ class _RegisterState extends State<Register> {
                           keyboardType: TextInputType.number,
                           maxLength: 12),
                           getBarcode(),
+                      Padding(padding: EdgeInsets.only(bottom:15)),
                       SizedBox(
                           width: double.infinity,
                           child: RaisedButton(

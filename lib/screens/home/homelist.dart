@@ -84,6 +84,7 @@ class _HomelistState extends State<Homelist> {
     Map<String, dynamic> myOrder = Map();
     snapshot = await refer["detail"].get();
     myOrder["orderId"] = refer["orderId"];
+    myOrder["cash"] = refer["cash"];
     myOrder["orderList"] = refer["orderList"];
     myOrder["userId"] = refer["userId"];
     myOrder["orderPath"] = orderid;
@@ -130,139 +131,6 @@ class _HomelistState extends State<Homelist> {
     );
   }
 
-  Widget showOrderTime() {
-    return RefreshIndicator(
-          onRefresh: getRefresh,
-          color: Color.fromRGBO(255, 51, 247, 1),
-          child: ListView.separated(
-          itemBuilder: (context, index) {
-            return orderAll[index]["time"] == null
-                ? Container()
-                : Container(
-                    padding: EdgeInsets.all(15.0),
-                    child: Column(
-                      children: [
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-                            Column(
-                              children: [
-                                Text(
-                                  orderAll[index]["orderId"],
-                                  style: TextStyle(fontSize: 18.0),
-                                ),
-                                orderAll[index]["time"] == null
-                                    ? Text("")
-                                    : Text(
-                                        "เวลารับ ${orderAll[index]["time"].toString()}"),
-                              ],
-                            ),
-                            Container(
-                                width: 200,
-                                child: Column(
-                                    children: List.generate(
-                                        orderAll[index]["detail"].length, (numa) {
-                                  return orderAll[index]["detailSta"][numa]
-                                          ["status"]
-                                      ? Container()
-                                      : Row(
-                                          mainAxisAlignment:
-                                              MainAxisAlignment.spaceBetween,
-                                          children: [
-                                            Column(
-                                              children: [
-                                                Container(
-                                            width: 120,
-                                            child: Text(
-                                              orderAll[index]["detail"][numa]
-                                                  ["name"],
-                                              style: TextStyle(fontSize: 18.0),
-                                            ),
-                                          ),
-                                
-                                              ],
-                                            ),
-                                            Row(
-                                              children: [
-                                                Text(
-                                                  "X${orderAll[index]["detail"][numa]["count"]}",
-                                                  style:
-                                                      TextStyle(fontSize: 18.0),
-                                                ),
-                                                Checkbox(
-                                                  value: orderAll[index]["detail"]
-                                                      [numa]["status"],
-                                                  onChanged: (bool value) {
-                                                    setState(() {
-                                                      orderAll[index]
-                                                          ["statusbtn"] = value;
-                                                      orderAll[index]["detail"]
-                                                              [numa]["status"] =
-                                                          value;
-                                                      if (value) {
-                                                        var check = orderSend
-                                                            .indexWhere((element) =>
-                                                                element[
-                                                                    "userId"] ==
-                                                                orderAll[index]
-                                                                    ["userId"]);
-                                                        orderSend
-                                                            .add(orderAll[index]);
-                                                      } else {
-                                                        orderSend.remove(
-                                                            orderAll[index]);
-                                                      }
-
-                                                      print(
-                                                          jsonEncode(orderSend));
-                                                    });
-                                                  },
-                                                ),
-                                              ],
-                                            )
-                                          ],
-                                        );
-                                }))),
-                          ],
-                        ),
-                        orderAll[index]["statusbtn"]
-                            ? Row(
-                                mainAxisSize: MainAxisSize.min,
-                                children: [
-                                  SizedBox(
-                                      width: 115,
-                                      child: OutlineButton(
-                                          child: Row(
-                                            children: [
-                                              Icon(Icons.send),
-                                              Text("กดเพื่อส่ง")
-                                            ],
-                                          ),
-                                          onPressed: () => alertSennd())),
-                                  Padding(padding: EdgeInsets.only(right: 7)),
-                                  SizedBox(
-                                      width: 95,
-                                      child: OutlineButton(
-                                          child: Row(
-                                            children: [
-                                              Icon(Icons.cancel_outlined),
-                                              Text("เคลียร์")
-                                            ],
-                                          ),
-                                          onPressed: () => alertClaer()))
-                                ],
-                              )
-                            : Container()
-                      ],
-                    ),
-                  );
-          },
-          separatorBuilder: (context, index) {
-            return orderAll[index]["time"] == null ? Container() : Divider();
-          },
-          itemCount: orderAll.length),
-    );
-  }
 
   Future getRefresh()async{
       setState(() {
@@ -318,97 +186,121 @@ class _HomelistState extends State<Homelist> {
       itemCount: data.length);
   }
 
-  Widget showOrder() {
+  Widget showOrder(bool selectTime) {
+    bool statusTime;
     return RefreshIndicator(
             onRefresh: getRefresh,
             color: Color.fromRGBO(255, 51, 247, 1),
           child: ListView.separated(
           itemBuilder: (context, index) {
-            return Container(
+            if(selectTime && orderAll[index]["time"] != null){
+              statusTime = true;
+            }
+            else if(!selectTime){
+              statusTime = true;
+            }
+            else{
+              statusTime = false;
+            }
+            return statusTime ? Container(
               padding: EdgeInsets.all(15.0),
               child: Column(
                 children: [
                   Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    mainAxisAlignment: MainAxisAlignment.start,
+                    mainAxisSize: MainAxisSize.min,
                     children: [
-                      Container(
-                        width: 50,
-                        child: Column(
-                          children: [
-                            Text(
-                              orderAll[index]["orderId"],
-                              style: TextStyle(fontSize: 18.0),
-                            ),
-                            orderAll[index]["time"] == null
-                                ? Text("")
-                                : Text(
-                                    "เวลารับ ${orderAll[index]["time"].toString()}"),
-                          ],
+                      Expanded(
+                        
+                        child: Align(
+                          alignment: Alignment.centerLeft,
+                          child: Column(
+                            children: [
+                              Text(
+                                orderAll[index]["orderId"],
+                                style: TextStyle(fontSize: 18.0)
+                              ),
+                              orderAll[index]["time"] == null
+                                  ? Text("")
+                                  : Text(
+                                      "เวลารับ ${orderAll[index]["time"].toString()}"),
+                              orderAll[index]["cash"] == "จ่ายเงินสด" ? Text("ยังไม่ได้ชำระเงิน",style: TextStyle(color:Colors.red),) :Text("")
+                            ],
+                          ),
                         ),
                       ),
-                      Container(
-                          width: 300,
-                          child: Column(
-                              children: List.generate(
-                                  orderAll[index]["detail"].length, (numa) {
-                            return orderAll[index]["detailSta"][numa]["status"]
-                                ? Container()
-                                : Row(
-                                    mainAxisAlignment:
-                                        MainAxisAlignment.spaceBetween,
-                                    children: [
-                                      Column(
-                                        children: [
-                                          Container(
-                                            width: 170,
-                                            child: Text(
-                                              orderAll[index]["detail"][numa]
-                                                  ["name"],
-                                              style: TextStyle(fontSize: 18.0),
-                                            ),
+                      Expanded(
+                          flex: 2,
+                          child: Align(
+                            alignment: Alignment.centerLeft,
+                            child: Column(
+                                children: List.generate(
+                                    orderAll[index]["detail"].length, (numa) {
+                              return orderAll[index]["detailSta"][numa]["status"]
+                                  ? Container()
+                                  : Row(
+                                      mainAxisAlignment:
+                                          MainAxisAlignment.start,
+                                      mainAxisSize: MainAxisSize.min,
+                                      children: [
+                                        Expanded(
+                                          flex: 2,
+                                          child: Column(
+                                            children: [
+                                              Container(
+                                                width: 170,
+                                                child: Text(
+                                                  orderAll[index]["detail"][numa]
+                                                      ["name"],
+                                                  style: TextStyle(fontSize: 18.0),textAlign: TextAlign.start,
+                                                ),
+                                              ),
+                                            ],
                                           ),
-                                        ],
-                                      ),
-                                      Row(
-                                        children: [
-                                          Text(
-                                            "X${orderAll[index]["detail"][numa]["count"]}",
-                                            style: TextStyle(fontSize: 18.0),
-                                          ),
-                                          Checkbox(
-                                            value: orderAll[index]["detail"][numa]
-                                                ["status"],
-                                            onChanged: (bool value) {
-                                              setState(() {
-                                                orderAll[index]["statusbtn"] =
-                                                    value;
-                                                orderAll[index]["detail"][numa]
-                                                    ["status"] = value;
-                                                if (value) {
-                                                  orderAll[index]["nameSend"].add(orderAll[index]["detail"][numa]
-                                                    ["name"]);
-                                                  var check = orderSend
-                                                      .indexWhere((element) =>
-                                                          element["userId"] ==
-                                                          orderAll[index]
-                                                              ["userId"]);
-                                                  orderSend.add(orderAll[index]);
-                                                } else {
-                                                  orderAll[index]["nameSend"].remove(orderAll[index]["detail"][numa]
-                                                    ["name"]);
-                                                  orderSend
-                                                      .remove(orderAll[index]);
-                                                }
+                                        ),
+                                        Expanded(
+                                          child: Row(
+                                            children: [
+                                              Text(
+                                                "X${orderAll[index]["detail"][numa]["count"]}",
+                                                style: TextStyle(fontSize: 18.0),
+                                              ),
+                                              Checkbox(
+                                                value: orderAll[index]["detail"][numa]
+                                                    ["status"],
+                                                onChanged: (bool value) {
+                                                  setState(() {
+                                                    orderAll[index]["statusbtn"] =
+                                                        value;
+                                                    orderAll[index]["detail"][numa]
+                                                        ["status"] = value;
+                                                    if (value) {
+                                                      orderAll[index]["nameSend"].add(orderAll[index]["detail"][numa]
+                                                        ["name"]);
+                                                      var check = orderSend
+                                                          .indexWhere((element) =>
+                                                              element["userId"] ==
+                                                              orderAll[index]
+                                                                  ["userId"]);
+                                                      orderSend.add(orderAll[index]);
+                                                    } else {
+                                                      orderAll[index]["nameSend"].remove(orderAll[index]["detail"][numa]
+                                                        ["name"]);
+                                                      orderSend
+                                                          .remove(orderAll[index]);
+                                                    }
 
-                                                print(orderAll[index]["nameSend"]);
-                                              });
-                                            },
+                                                    print(orderAll[index]["nameSend"]);
+                                                  });
+                                                },
+                                              ),
+                                            ],
                                           ),
-                                        ],
-                                      )
-                                    ],
-                                  );
-                          }))),
+                                        )
+                                      ],
+                                    );
+                            })),
+                          )),
                     ],
                   ),
                   orderAll[index]["statusbtn"]
@@ -441,10 +333,10 @@ class _HomelistState extends State<Homelist> {
                       : Container()
                 ],
               ),
-            );
+            ) : Container();
           },
           separatorBuilder: (context, index) {
-            return Divider();
+            return statusTime ? Divider() : Container();
           },
           itemCount: orderAll.length),
     );
@@ -563,8 +455,8 @@ class _HomelistState extends State<Homelist> {
           children: [
             Container(
               padding: EdgeInsets.only(bottom: 80),
-              child: showOrder()),
-            showOrderTime(),
+              child: showOrder(false)),
+            showOrder(true),
             showOrderDouly()
           ],
         ),

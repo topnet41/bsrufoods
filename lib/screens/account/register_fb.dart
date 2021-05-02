@@ -155,7 +155,7 @@ class _RegisterFbState extends State<RegisterFb> {
     map['menus'] = ref;
     map['timeon'] = "09:00";
     map['timeoff'] = "16:00";
-    map['profile'] = urlPhoto;
+    map['profile'] = firebaseAuth.currentUser.photoURL;
 
     var user = firebaseAuth.currentUser;
     if (user != null) {

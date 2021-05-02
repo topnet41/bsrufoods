@@ -115,6 +115,7 @@ class _AccountState extends State<Account> {
           title: Text("บัญชีผู้ใช้", style: TextStyle(fontSize: 32.0)),
           leading: Text(""),
           centerTitle: true,
+          
         ),
         body: SingleChildScrollView(
           child: Column(
@@ -123,10 +124,10 @@ class _AccountState extends State<Account> {
                 leading: ClipRRect(
                     borderRadius: BorderRadius.circular(50.0),
                     child: user.photoURL == null
-                        ? Text("adas")
-                        : Image.network(user.photoURL)),
+                        ? Text("กำลังโหลดรูปถาพ")
+                        : Image.network(user.photoURL,width: 50,height: 50,fit: BoxFit.cover,)),
                 title: user.displayName == null
-                    ? Text("asd")
+                    ? Text("กำลังโหลดข้อมูล")
                     : Text(
                         user.displayName,
                         style: TextStyle(fontSize: 20),
