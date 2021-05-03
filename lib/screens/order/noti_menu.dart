@@ -40,7 +40,7 @@ class _NotiMenuState extends State<NotiMenu> {
       setState(() {});
     }).toList();
     getUser();
-    print("id = ${widget.order}");
+    print("id = ${widget.userId}");
   }
 
   confirmOrder() async {

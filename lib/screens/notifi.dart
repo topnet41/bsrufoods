@@ -100,11 +100,12 @@ class _NotifiState extends State<Notifi> {
               tileColor: noti[index]["status"]["staOrder"] ? Colors.white : Color.fromRGBO(255, 0, 0, 0.3),            
               subtitle: Text("วันที่ ${noti[index]["orderDate"]}"),
               onTap: (){
-                MaterialPageRoute route = MaterialPageRoute(builder: (BuildContext context)=>NotiMenu(noti[index]["userid"],noti[index]["orderpath"], noti[index]));
+                MaterialPageRoute route = MaterialPageRoute(builder: (BuildContext context)=>NotiMenu(noti[index]["userId"],noti[index]["orderpath"], noti[index]));
                 Navigator.push(context, route).then((value){setState(() {
                   noti = [];
                   getnoti();
                 });});
+                // print(noti[index]["userId"]);
               },
             );
           },

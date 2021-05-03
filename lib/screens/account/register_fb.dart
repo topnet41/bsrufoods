@@ -139,7 +139,7 @@ class _RegisterFbState extends State<RegisterFb> {
     await _firebaseMessaging.getToken().then((String token) {
       tokenUser = [token];
     });
-    num count = 5;
+    num count = 200;
     Map<String, dynamic> map = Map();
     map['username'] = firebaseAuth.currentUser.displayName;
     map['userId'] = "${now.year}$memberid";

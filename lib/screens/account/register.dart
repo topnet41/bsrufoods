@@ -186,7 +186,7 @@ class _RegisterState extends State<Register> {
     await _firebaseMessaging.getToken().then((String token) {
       tokenUser = [token];
     });
-    num count = 5;
+    num count = 200;
     Map<String, dynamic> map = Map();
     map['username'] = name.text;
     map['userId'] = "${now.year}$memberid";

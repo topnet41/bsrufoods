@@ -294,7 +294,7 @@ class _EditUserState extends State<EditUser> {
                           ? Container(
                             decoration: BoxDecoration(
                               borderRadius: BorderRadius.circular(100),
-                              image:DecorationImage(image: FileImage(_image))
+                              image:DecorationImage(image: FileImage(_image),fit: BoxFit.cover)
                             ),
                             width:200,
                             height:200

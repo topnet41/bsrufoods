@@ -116,78 +116,80 @@ class _ReportState extends State<Report> {
     reportDiary.map((price){
       _total = _total + (price["price"]*price["count_report"]);
     }).toList();
-    return Column(
-      children: [
-        Padding(padding: EdgeInsets.only(top:23)),
-        Center(
-          child: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-            Text("เลือกวันที่เพื่อดูยอดขาย",style: TextStyle(fontSize:20),),
-            Padding(padding: EdgeInsets.only(right:10)),
-            Container(
-              width: 150,
-              height: 50,
-              decoration: BoxDecoration(borderRadius: BorderRadius.circular(20),color: Colors.red,),
-              
-              child: InkWell(
-                  onTap: () => showdate(),
-                  child: Center(
-                      child: dataReport == null
-                          ? Text("กดเพื่อเลือกวันที่",style: TextStyle(color:Colors.white,fontSize: 18))
-                          : Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              Text(dataReport,style: TextStyle(color:Colors.white,fontSize: 18),),
-                              Icon(Icons.arrow_drop_down,size: 30,color: Colors.white,)
-                            ],
-                          ))),
-            )
-          ]),
-        ),
-        Padding(padding: EdgeInsets.only(bottom:10)),
-        reportDiary.length > 0 ? 
-          Text("ยอดขายรวมทั้งหมด \n ${NumberFormat.simpleCurrency(name: '').format(_total)} บาท",style: TextStyle(fontSize:18),textAlign: TextAlign.center,)
-         : Text(""),
-        Padding(padding: EdgeInsets.only(bottom:10)),
-        Card(
-              child: Container(
-                padding: EdgeInsets.all(20),
-                child: Row(
-                  children: [
-                    Expanded(child: Text("ชื่อเมนู",textAlign: TextAlign.left,style: TextStyle(fontSize:18)),),
-                    Expanded(child: Text("จำนวน",textAlign: TextAlign.right,style: TextStyle(fontSize:18))),
-                    Expanded(child: Text("หน่วยละ",textAlign: TextAlign.right,style: TextStyle(fontSize:18))),
-                    Expanded(child: Text("รวม",textAlign: TextAlign.right,style: TextStyle(fontSize:18))),
-                  ],
+    return SingleChildScrollView(
+      child: Column(
+        children: [
+          Padding(padding: EdgeInsets.only(top:23)),
+          Center(
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+              Text("เลือกวันที่เพื่อดูยอดขาย",style: TextStyle(fontSize:20),),
+              Padding(padding: EdgeInsets.only(right:10)),
+              Container(
+                width: 150,
+                height: 50,
+                decoration: BoxDecoration(borderRadius: BorderRadius.circular(20),color: Colors.red,),
+                
+                child: InkWell(
+                    onTap: () => showdate(),
+                    child: Center(
+                        child: dataReport == null
+                            ? Text("กดเพื่อเลือกวันที่",style: TextStyle(color:Colors.white,fontSize: 18))
+                            : Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Text(dataReport,style: TextStyle(color:Colors.white,fontSize: 18),),
+                                Icon(Icons.arrow_drop_down,size: 30,color: Colors.white,)
+                              ],
+                            ))),
+              )
+            ]),
+          ),
+          Padding(padding: EdgeInsets.only(bottom:10)),
+          reportDiary.length > 0 ? 
+            Text("ยอดขายรวมทั้งหมด \n ${NumberFormat.simpleCurrency(name: '').format(_total)} บาท",style: TextStyle(fontSize:18),textAlign: TextAlign.center,)
+           : Text(""),
+          Padding(padding: EdgeInsets.only(bottom:10)),
+          Card(
+                child: Container(
+                  padding: EdgeInsets.all(20),
+                  child: Row(
+                    children: [
+                      Expanded(child: Text("ชื่อเมนู",textAlign: TextAlign.left,style: TextStyle(fontSize:18)),),
+                      Expanded(child: Text("จำนวน",textAlign: TextAlign.right,style: TextStyle(fontSize:18))),
+                      Expanded(child: Text("หน่วยละ",textAlign: TextAlign.right,style: TextStyle(fontSize:18))),
+                      Expanded(child: Text("รวม",textAlign: TextAlign.right,style: TextStyle(fontSize:18))),
+                    ],
+                  ),
                 ),
+                
               ),
+          ListView.separated(
+            shrinkWrap: true,
+            itemBuilder: (context, index) {
               
-            ),
-        ListView.separated(
-          shrinkWrap: true,
-          itemBuilder: (context, index) {
-            
-            return Card(
-              child: Container(
-                padding: EdgeInsets.all(20),
-                child: Row(
-                  children: [
-                    Expanded(child: Text("${reportDiary[index]["name"]} ",textAlign: TextAlign.left,style: TextStyle(fontSize:18)),),
-                    Expanded(child: Text("${reportDiary[index]["count_report"]}",textAlign: TextAlign.right,style: TextStyle(fontSize:18))),
-                    Expanded(child: Text("${reportDiary[index]["price"]}",textAlign: TextAlign.right,style: TextStyle(fontSize:18))),
-                    Expanded(child: Text("${NumberFormat.simpleCurrency(name: '').format((reportDiary[index]["price"]*reportDiary[index]["count_report"]))}",textAlign: TextAlign.right,style: TextStyle(fontSize:18))),
-                  ],
+              return Card(
+                child: Container(
+                  padding: EdgeInsets.all(20),
+                  child: Row(
+                    children: [
+                      Expanded(child: Text("${reportDiary[index]["name"]} ",textAlign: TextAlign.left,style: TextStyle(fontSize:18)),),
+                      Expanded(child: Text("${reportDiary[index]["count_report"]}",textAlign: TextAlign.right,style: TextStyle(fontSize:18))),
+                      Expanded(child: Text("${reportDiary[index]["price"]}",textAlign: TextAlign.right,style: TextStyle(fontSize:18))),
+                      Expanded(child: Text("${NumberFormat.simpleCurrency(name: '').format((reportDiary[index]["price"]*reportDiary[index]["count_report"]))}",textAlign: TextAlign.right,style: TextStyle(fontSize:18))),
+                    ],
+                  ),
                 ),
-              ),
-              
-            );
-          },
-          separatorBuilder: (context, index) =>
-              Padding(padding: EdgeInsets.only(bottom: 5)),
-          itemCount: reportDiary.length,
-        )
-      ],
+                
+              );
+            },
+            separatorBuilder: (context, index) =>
+                Padding(padding: EdgeInsets.only(bottom: 5)),
+            itemCount: reportDiary.length,
+          )
+        ],
+      ),
     );
   }
 
