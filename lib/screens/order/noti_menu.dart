@@ -50,7 +50,7 @@ class _NotiMenuState extends State<NotiMenu> {
         .update({"staOrder": true});
     dataShop["tokenUser"].forEach((value) {
       http.get(
-          "https://apibsrufood.000webhostapp.com/apiNotification.php?isAdd=true&token=$value&title=${dataShop["username"]}&body=ออเดอร์ยืนยันแล้ว");
+          "https://apinotificationbsrufood.000webhostapp.com/apiNotification.php?isAdd=true&token=$value&title=${dataShop["username"]}&body=ออเดอร์ยืนยันแล้ว");
     });
     Navigator.pop(context);
   }

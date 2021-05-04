@@ -78,7 +78,7 @@ class Authcontroller {
     FacebookLoginResult result =
         await facebookLogin.logIn(["email", "public_profile"]);
     var token = result.accessToken.token;
-
+    
     final graphResponse = await http.get(
         'https://graph.facebook.com/v2.12/me?fields=name,first_name,last_name,picture,email&access_token=${token}');
     final profile = json.decode(graphResponse.body);

@@ -18,7 +18,7 @@ class SendOrder {
       value.docs.map((data) {
         data["tokenUser"].forEach((value) {
           http.get(
-              "https://apibsrufood.000webhostapp.com/apiNotification.php?isAdd=true&token=$value&title=$username&body=$mes");
+              "https://apinotificationbsrufood.000webhostapp.com/apiNotification.php?isAdd=true&token=$value&title=$username&body=$mes");
         });
       }).toList();
     });
